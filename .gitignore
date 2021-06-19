@@ -1,4 +1,8 @@
 *ipynb_checkpoints
+assets/*
+corpus/*
+training/*
+*.lock
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

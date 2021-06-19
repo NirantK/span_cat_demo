@@ -11,8 +11,6 @@ def convert_to_BIO(data, output_path):
     ner_tags = data.features["ner_tags"].feature.names
     new_data = []
     for i, element in enumerate(data):
-        if i > count:
-            break
         d = element
         text = []
         entities = []
