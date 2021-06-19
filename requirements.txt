@@ -1,4 +1,4 @@
 spacy-transformers
-https://github.com/explosion/wheelwright/releases/download/spacy-feature-span-categorizer-v3/spacy-3.1.0.dev1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+https://github.com/explosion/wheelwright/releases/download/spacy-feature-span-categorizer-v3-2/spacy-3.1.0.dev2-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 fire
 datasets
