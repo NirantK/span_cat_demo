@@ -24,7 +24,6 @@ assets:
     description: "TBD"
 
 workflows:
-  workflows:
   all:
     - assets
     - corpus
