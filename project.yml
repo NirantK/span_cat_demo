@@ -33,7 +33,6 @@ workflows:
   all_gpu:
     - assets
     - corpus
-    - create-config-gpu
     - train-gpu
     - evaluate
 
