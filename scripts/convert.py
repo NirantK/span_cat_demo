@@ -22,9 +22,9 @@ def convert(lang: str, input_path: Path, output_path: Path):
                 warnings.warn(msg)
             else:
                 ents.append(span)
-        try : 
+        try:
             doc.ents = ents
-        except : 
+        except:
             msg = f"Skipping sentence {text}, {annot}"
             # warnings.warn(msg)
         db.add(doc)
