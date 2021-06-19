@@ -94,7 +94,6 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "configs/${vars.config}.cfg"
-      - "layers/"
     outputs:
       - "training/model-best"
   
