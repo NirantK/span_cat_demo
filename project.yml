@@ -19,21 +19,21 @@ directories: ["assets", "corpus", "configs", "training", "metrics", "scripts", "
 # them with the project, so they won't have to be downloaded.
 assets:
   - dest: "assets/train.json"
-    description: "Demo training data converted from the v2 `train_ner.py` example with `srsly.write_json(\"train.json\", TRAIN_DATA)`"
+    description: "TBD"
   - dest: "assets/dev.json"
-    description: "Demo development data"
+    description: "TBD"
 
 workflows:
+  workflows:
   all:
-    - download
-    - convert
-    - create-config
+    - assets
+    - corpus
     - train
     - evaluate
 
   all_gpu:
-    - download
-    - convert
+    - assets
+    - corpus
     - create-config-gpu
     - train-gpu
     - evaluate
@@ -43,14 +43,15 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "download"
-    help: "Download"
+  - name: "assets"
+    help: "Downloads assets"
     script:
       - "python -m scripts.download --output_path ${vars.train}"
       - "python -m scripts.download --output_path ${vars.dev}"
       - "python -m scripts.download --output_path ${vars.test}"
-  - name: "convert"
-    help: "Convert the data to spaCy's binary format"
+
+  - name: "corpus"
+    help: "Convert the data to spaCy's binary format and write to corpus"
     script:
       - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
       - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
@@ -69,20 +70,6 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
-
-  - name: "create-config"
-    help: "Create a new config with an NER pipeline component"
-    script:
-      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/config.cfg --force"
-    outputs:
-      - "configs/config.cfg"
-
-  - name: "create-config-gpu"
-    help: "Create a new config with an NER pipeline component"
-    script:
-      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/config.cfg --gpu --force"
-    outputs:
-      - "configs/config.cfg"
       
   - name: train
     help: "Train the pipeline"
