@@ -1,0 +1,143 @@
+title: "Span Categorizer Demo"
+description: "CoNLL-2003 English NER Dataset"
+vars:
+  name: "spancat"
+  lang: "en"
+  train: "train.json"
+  dev: "dev.json"
+  test: "test.json"
+  version: "0.0.0"
+  gpu_id: -1
+  config: "spancat"  # "ner"
+  spans_key: "spans"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "configs", "training", "metrics", "scripts", "packages"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+assets:
+  - dest: "assets/train.json"
+    description: "Demo training data converted from the v2 `train_ner.py` example with `srsly.write_json(\"train.json\", TRAIN_DATA)`"
+  - dest: "assets/dev.json"
+    description: "Demo development data"
+
+workflows:
+  all:
+    - download
+    - convert
+    - create-config
+    - train
+    - evaluate
+    - clean
+
+  all_gpu:
+    - download
+    - convert
+    - create-config-gpu
+    - train-gpu
+    - evaluate
+    - clean
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: "download"
+    help: "Download"
+    script:
+      - "python -m scripts.download --output_path ${vars.train}"
+      - "python -m scripts.download --output_path ${vars.dev}"
+      - "python -m scripts.download --output_path ${vars.test}"
+  - name: "convert"
+    help: "Convert the data to spaCy's binary format"
+    script:
+      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
+      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/test.spacy"
+
+      - "python scripts/add_ents_to_spans_dict.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/add_ents_to_spans_dict.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/add_ents_to_spans_dict.py corpus/test.spacy ${vars.lang} ${vars.spans_key}"
+
+    deps:
+      - "assets/${vars.train}"
+      - "assets/${vars.dev}"
+      - "assets/${vars.test}"
+      - "scripts/convert.py"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+
+  - name: "create-config"
+    help: "Create a new config with an NER pipeline component"
+    script:
+      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/config.cfg --force"
+    outputs:
+      - "configs/config.cfg"
+
+  - name: "create-config-gpu"
+    help: "Create a new config with an NER pipeline component"
+    script:
+      - "python -m spacy init config --lang ${vars.lang} --pipeline ner configs/config.cfg --gpu --force"
+    outputs:
+      - "configs/config.cfg"
+      
+  - name: train
+    help: "Train the pipeline"
+    script:
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+      - "layers/"
+    outputs:
+      - "training/model-best"
+  
+  - name: "train-gpu"
+    help: "Train the NER model"
+    script:
+      - "python -m spacy train configs/config.cfg --output training/ --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --training.eval_frequency 10 --training.patience 50 --gpu-id 0"
+    deps:
+      - "configs/config.cfg"
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+    outputs:
+      - "training/model-best"
+
+  - name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/model-best ./corpus/dev.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "training/model-best"
+      - "corpus/dev.spacy"
+    outputs:
+      - "metrics/${vars.config}.json"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf corpus/*"
+
+  - name: package
+    help: "Package the trained model as a pip package"
+    script:
+      - "python -m spacy package training/model-best packages --name ${vars.name} --version ${vars.version} --force"
+    deps:
+      - "training/model-best"
+    outputs_no_cache:
+      - "packages/${vars.lang}_${vars.name}-${vars.version}/dist/${vars.lang}_${vars.name}-${vars.version}.tar.gz"
+
+  - name: visualize-model
+    help: Visualize the model's output interactively using Streamlit
+    script:
+      - "streamlit run scripts/visualize_model.py training/model-best \"I saw Shaka Khan in London.\""
+    deps:
+      - "scripts/visualize_model.py"
+      - "training/model-best"
