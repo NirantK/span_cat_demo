@@ -8,7 +8,7 @@ from datasets import load_dataset
 def convert_to_BIO(data, output_path):
     ner_tags = data.features["ner_tags"].feature.names
     new_data = []
-    for i, element in enumerate(len(data)):
+    for i, element in enumerate(data):
         d = data[i]
         text = []
         entities = []
