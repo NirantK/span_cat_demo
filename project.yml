@@ -17,21 +17,22 @@ directories: ["assets", "corpus", "configs", "training", "metrics", "scripts", "
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
+
 assets:
-  - dest: "assets/train.json"
-    description: "TBD"
-  - dest: "assets/dev.json"
-    description: "TBD"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/valid.txt"
+    dest: "assets/conll2003/dev.iob"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
+    dest: "assets/conll2003/train.iob"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/test.txt"
+    dest: "assets/conll2003/test.iob"
 
 workflows:
   all:
-    - assets
     - corpus
     - train
     - evaluate
 
   all_gpu:
-    - assets
     - corpus
     - train-gpu
     - evaluate
@@ -41,29 +42,16 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "assets"
-    help: "Downloads assets"
+  - name: corpus
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
     script:
-      - "python -m scripts.download --output_path ${vars.train}"
-      - "python -m scripts.download --output_path ${vars.dev}"
-      - "python -m scripts.download --output_path ${vars.test}"
-
-  - name: "corpus"
-    help: "Convert the data to spaCy's binary format and write to corpus"
-    script:
-      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
-      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
-      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/test.spacy"
-
-      - "python scripts/add_ents_to_spans_dict.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
-      - "python scripts/add_ents_to_spans_dict.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
-      - "python scripts/add_ents_to_spans_dict.py corpus/test.spacy ${vars.lang} ${vars.spans_key}"
-
+      - "python -m spacy convert assets/conll2003 corpus/ -n 10"
     deps:
-      - "assets/${vars.train}"
-      - "assets/${vars.dev}"
-      - "assets/${vars.test}"
-      - "scripts/convert.py"
+      - "assets/conll2003/dev.iob"
+      - "assets/conll2003/test.iob"
+      - "assets/conll2003/train.iob"
     outputs:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
