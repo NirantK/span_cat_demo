@@ -1,35 +1,23 @@
-"""Convert entity annotation from spaCy v2 TRAIN_DATA format to spaCy v3
-.spacy format."""
-import srsly
-import typer
-import warnings
 from pathlib import Path
-
+import typer
 import spacy
 from spacy.tokens import DocBin
 
 
-def convert(lang: str, input_path: Path, output_path: Path):
+def main(loc: Path, lang: str, spans_key: str):
+    """
+    Set the NER data into the doc.spans, under a given key.
+    The SpanCategorizer component uses the doc.spans, so that it can work with
+    overlapping or nested annotations, which can't be represented on the
+    per-token level.
+    """
     nlp = spacy.blank(lang)
-    db = DocBin()
-    for text, annot in srsly.read_json(input_path):
-        doc = nlp.make_doc(text)
-        ents = []
-        for start, end, label in annot["entities"]:
-            span = doc.char_span(start, end, label=label)
-            if span is None:
-                msg = f"Skipping entity [{start}, {end}, {label}] in the following text because the character span '{doc.text[start:end]}' does not align with token boundaries:\n\n{repr(text)}\n"
-                warnings.warn(msg)
-            else:
-                ents.append(span)
-        try:
-            doc.ents = ents
-        except:
-            msg = f"Skipping sentence {text}, {annot}"
-            # warnings.warn(msg)
-        db.add(doc)
-    db.to_disk(output_path)
+    docbin = DocBin().from_disk(loc)
+    docs = list(docbin.get_docs(nlp.vocab))
+    for doc in docs:
+        doc.spans[spans_key] = list(doc.ents)
+    DocBin(docs=docs).to_disk(loc)
 
 
 if __name__ == "__main__":
-    typer.run(convert)
+    typer.run(main)

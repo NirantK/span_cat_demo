@@ -1,13 +1,13 @@
 title: "Span Categorizer Demo"
 description: "CoNLL-2003 English NER Dataset || The SpanCategorizer is a component for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules."
 vars:
-  name: "spancat"
+  name: "spancatgpu"
   lang: "en"
   train: "train.json"
   dev: "dev.json"
   test: "test.json"
   version: "0.0.0"
-  gpu_id: -1
+  gpu_id: 0
   config: "spancat"  # "ner"
   spans_key: "sc"
 
@@ -17,21 +17,22 @@ directories: ["assets", "corpus", "configs", "training", "metrics", "scripts", "
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
+
 assets:
-  - dest: "assets/train.json"
-    description: "TBD"
-  - dest: "assets/dev.json"
-    description: "TBD"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/valid.txt"
+    dest: "assets/conll2003/dev.iob"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
+    dest: "assets/conll2003/train.iob"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/test.txt"
+    dest: "assets/conll2003/test.iob"
 
 workflows:
   all:
-    - assets
     - corpus
     - train
     - evaluate
 
   all_gpu:
-    - assets
     - corpus
     - train-gpu
     - evaluate
@@ -41,34 +42,26 @@ workflows:
 # via "spacy project run [command] [path]". The help message is optional and
 # shown when executing "spacy project run [optional command] [path] --help".
 commands:
-  - name: "assets"
-    help: "Downloads assets"
+  - name: corpus
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
     script:
-      - "python -m scripts.download --output_path ${vars.train}"
-      - "python -m scripts.download --output_path ${vars.dev}"
-      - "python -m scripts.download --output_path ${vars.test}"
-
-  - name: "corpus"
-    help: "Convert the data to spaCy's binary format and write to corpus"
-    script:
-      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/train.spacy"
-      - "python scripts/convert.py ${vars.lang} assets/${vars.dev} corpus/dev.spacy"
-      - "python scripts/convert.py ${vars.lang} assets/${vars.train} corpus/test.spacy"
-
-      - "python scripts/add_ents_to_spans_dict.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
-      - "python scripts/add_ents_to_spans_dict.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
-      - "python scripts/add_ents_to_spans_dict.py corpus/test.spacy ${vars.lang} ${vars.spans_key}"
-
+      - "python -m spacy convert assets/conll2003 corpus/"
+      - "python scripts/convert.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/convert.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/convert.py corpus/test.spacy ${vars.lang} ${vars.spans_key}"
     deps:
-      - "assets/${vars.train}"
-      - "assets/${vars.dev}"
-      - "assets/${vars.test}"
       - "scripts/convert.py"
+      - "assets/conll2003/train.iob"
+      - "assets/conll2003/dev.iob"
+      - "assets/conll2003/test.iob"
     outputs:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "corpus/test.spacy"
-      
+  
+    
   - name: train
     help: "Train the pipeline"
     script:
