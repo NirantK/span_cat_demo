@@ -4,7 +4,7 @@ vars:
   name: "spancat"
   lang: "en"
   version: "0.0.0"
-  gpu_id: 0
+  gpu_id: -1
   config: "spancat"  # "ner"
   spans_key: "sc"
 
