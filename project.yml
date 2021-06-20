@@ -4,8 +4,8 @@ vars:
   name: "spancat"
   lang: "en"
   version: "0.0.0"
-  gpu_id: -1
-  config: "spancat"  # "ner"
+  gpu_id: 0
+  config: "spancagput"  # "ner"
   spans_key: "sc"
 
 # These are the directories that the project needs. The project CLI will make
