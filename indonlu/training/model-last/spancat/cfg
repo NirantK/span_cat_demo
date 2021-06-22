@@ -1,0 +1,15 @@
+{
+  "labels":[
+    "B-ORG",
+    "B-MISC",
+    "B-PER",
+    "I-PER",
+    "B-LOC",
+    "I-ORG",
+    "I-MISC",
+    "I-LOC"
+  ],
+  "spans_key":"sc",
+  "threshold":0.5,
+  "max_positive":null
+}
