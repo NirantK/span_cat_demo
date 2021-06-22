@@ -1,0 +1,81 @@
+title: "Span Categorizer Demo"
+description: "CoNLL-2003 English NER Dataset || The SpanCategorizer is a component for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules."
+vars:
+  lang: "en"
+  version: "0.0.0"
+  gpu_id: 0
+  config: "spancatgpu"
+  spans_key: "sc"
+
+# These are the directories that the project needs. The project CLI will make
+# sure that they always exist.
+directories: ["assets", "corpus", "configs", "training", "metrics", "scripts", "packages"]
+
+# Assets that should be downloaded or available in the directory. We're shipping
+# them with the project, so they won't have to be downloaded.
+
+assets:
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/valid.txt"
+    dest: "assets/conll2003/dev.iob"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
+    dest: "assets/conll2003/train.iob"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/test.txt"
+    dest: "assets/conll2003/test.iob"
+
+workflows:
+  all:
+    - corpus
+    - train
+    - evaluate
+
+# Project commands, specified in a style similar to CI config files (e.g. Azure
+# pipelines). The name is the command name that lets you trigger the command
+# via "spacy project run [command] [path]". The help message is optional and
+# shown when executing "spacy project run [optional command] [path] --help".
+commands:
+  - name: corpus
+    help: "Convert the data to spaCy's format"
+    # Make sure we specify the branch in the command string, so that the
+    # caching works correctly.
+    script:
+      - "python -m spacy convert assets/conll2003 corpus/ -n 10"
+      - "python scripts/convert.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/convert.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
+      - "python scripts/convert.py corpus/test.spacy ${vars.lang} ${vars.spans_key}"
+    deps:
+      - "scripts/convert.py"
+      - "assets/conll2003/train.iob"
+      - "assets/conll2003/dev.iob"
+      - "assets/conll2003/test.iob"
+    outputs:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "corpus/test.spacy"
+  
+    
+  - name: train
+    help: "Train the pipeline"
+    script:
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+    deps:
+      - "corpus/train.spacy"
+      - "corpus/dev.spacy"
+      - "configs/${vars.config}.cfg"
+    outputs:
+      - "training/model-best"
+
+  - name: evaluate
+    help: "Evaluate on the test data and save the metrics"
+    script:
+      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu_id}"
+    deps:
+      - "training/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/${vars.config}.json"
+
+  - name: clean
+    help: "Remove intermediate files"
+    script:
+      - "rm -rf training/*"
+      - "rm -rf corpus/*"
