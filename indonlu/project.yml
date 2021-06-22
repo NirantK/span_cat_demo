@@ -4,7 +4,7 @@ description:
 
 vars:
   config: "inline"  # "ner"
-  gpu: -1
+  gpu: 0
   lang: "id"
   spans_key: "grit_spans"
 
