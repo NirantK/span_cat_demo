@@ -6,7 +6,7 @@ vars:
   config: "spancat"  # "ner"
   gpu: 0
   lang: "id"
-  spans_key: "sc"
+  spans_key: "grit_spans"
 
 remotes:
   default: gs://galaxy-state/spacy-v3-experimental
