@@ -54,11 +54,9 @@ commands:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
       - "configs/${vars.config}.cfg"
-      - "layers/"
     outputs:
       - "training/model-best"
 
-  # TODO fix for spancat
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:

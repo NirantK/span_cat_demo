@@ -1,5 +1,6 @@
 title: "Span Categorizer Demo"
 description: "CoNLL-2003 English NER Dataset || The SpanCategorizer is a component for assigning labels to contiguous spans of text proposed by a customizable suggester function. Unlike spaCy's EntityRecognizer component, the SpanCategorizer can recognize nested or overlapping spans. It also doesn't rely as heavily on consistent starting and ending words, so it may be a better fit for non-NER span labelling tasks. You do have to write a function that proposes your candidate spans, however. If your spans are often short, you could propose all spans under a certain size. You could also use syntactic constituents such as noun phrases or noun chunks, or matcher rules."
+
 vars:
   lang: "en"
   version: "0.0.0"
@@ -9,7 +10,7 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "corpus", "configs", "training", "metrics", "scripts", "packages"]
+directories: ["assets", "training", "configs", "metrics", "metrics", "corpus", "packages"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
@@ -78,4 +79,5 @@ commands:
     help: "Remove intermediate files"
     script:
       - "rm -rf training/*"
+      - "rm -rf metrics/*"
       - "rm -rf corpus/*"
