@@ -6,7 +6,7 @@ vars:
   config: "inline"  # "ner"
   gpu: 0
   lang: "id"
-  spans_key: "grit_spans"
+  spans_key: "sc"
 
 remotes:
   default: gs://galaxy-state/spacy-v3-experimental
