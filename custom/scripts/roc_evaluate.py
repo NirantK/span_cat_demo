@@ -81,6 +81,7 @@ def direct_evaluate(
     scorer = Scorer(nlp)
     scores = nlp.evaluate(dev_dataset)
     print(scores)
+    return scores
     # metrics = {
     #     "TOK": "token_acc",
     #     "TAG": "tag_acc",
