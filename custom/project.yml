@@ -75,12 +75,13 @@ commands:
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.config}.json"
+  
   - name: roc_evaluate
     help: "Calculate the ROC-AUC scores, plots"
     script:
-      - "python -m scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}_roc.json --gpu-id ${vars.gpu_id}" 
+      - "python -m scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}_roc.json --gpu-id ${vars.gpu_id}"
     deps:
-      = "training/model-best"
+      - "training/model-best"
       - "corpus/test.spacy"
     outputs:
       - "metrics/${vars.config}.json"
