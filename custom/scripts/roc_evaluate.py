@@ -59,8 +59,8 @@ from spacy import displacy
 def evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path] = None,
     use_gpu: int = -1,
+    output: Optional[Path] = None,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
