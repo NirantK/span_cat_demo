@@ -59,7 +59,6 @@ from spacy import displacy
 def evaluate(
     model: str,
     data_path: Path,
-    use_gpu: int = -1,
     output: Optional[Path] = None,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
@@ -69,7 +68,6 @@ def evaluate(
 ) -> Scorer:
     msg = Printer(no_print=silent, pretty=not silent)
     fix_random_seed()
-    setup_gpu(use_gpu)
     data_path = util.ensure_path(data_path)
     output_path = util.ensure_path(output)
     displacy_path = util.ensure_path(displacy_path)
