@@ -79,7 +79,7 @@ commands:
   - name: roc_evaluate
     help: "Calculate the ROC-AUC scores, plots"
     script:
-      - "python scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}_roc.json --gpu-id ${vars.gpu_id}"
+      - "python scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}_roc.json --use_gpu ${vars.gpu_id}"
     deps:
       - "training/model-best"
       - "corpus/test.spacy"
