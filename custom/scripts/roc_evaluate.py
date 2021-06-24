@@ -171,10 +171,8 @@ def direct_evaluate(
             if isinstance(serialize_data[key], np.ndarray):
                 serialize_data[key] = value.tolist()
         srsly.write_json(output_path, serialize_data)
-        print(output_path)
         msg.good(f"Saved results to {output_path}")
     return data
-
 
 def render_parses(
     docs: List[Doc],
