@@ -171,7 +171,7 @@ def direct_evaluate(
                 serialize_data[key] = to_numpy(value).tolist()
             if key == "scores":
                 serialize_data[key] = value.tolist()
-                print(key, type(serialize_data[key]), serialize_data[key])
+                print(key, type(serialize_data[key]), type(serialize_data[key][0]))
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
     return data
