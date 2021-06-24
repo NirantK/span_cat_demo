@@ -56,7 +56,8 @@ from spacy import displacy
 #         silent=False,
 #     )
 
-from thinc.api import Ragged
+from thinc.types import Ragged
+from thinc.api import to_numpy
  
 def direct_evaluate(
     model: str,
@@ -166,7 +167,7 @@ def direct_evaluate(
         for key, value in data.items():
             serialize_data[key] = value
             if isinstance(serialize_data[key], Ragged):
-                serialize_data[key] = value.tolist()
+                serialize_data[key] = to_numpy(value).tolist()
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
     return data
