@@ -159,7 +159,7 @@ def direct_evaluate(
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     
-    if "INDICES" in data.keys:
+    if "INDICES" in data.keys():
         data["INDICES"] = data["INDICES"].tolist()
         data["SCORES"]=data["SCORES"].tolist()
     
