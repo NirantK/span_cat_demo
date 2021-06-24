@@ -67,7 +67,7 @@ commands:
       - "training/model-best"
 
   - name: evaluate
-    help: "Evaluate on the test data and save the metrics"
+    help: "Evaluate on the test data"
     script:
       - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu_id}"
     deps:
@@ -76,15 +76,15 @@ commands:
     outputs:
       - "metrics/${vars.config}.json"
   
-  - name: roc_evaluate
-    help: "Calculate the ROC-AUC scores, plots"
-    script:
-      - "python scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy ./metrics/${vars.config}_roc.json"
-    deps:
-      - "training/model-best"
-      - "corpus/test.spacy"
-    outputs:
-      - "metrics/${vars.config}.json"
+  # - name: roc_evaluate
+  #   help: "Calculate the ROC-AUC scores, plots"
+  #   script:
+  #     - "python scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy ./metrics/${vars.config}_roc.json"
+  #   deps:
+  #     - "training/model-best"
+  #     - "corpus/test.spacy"
+  #   outputs:
+  #     - "metrics/${vars.config}.json"
 
   - name: clean
     help: "Remove intermediate files"
