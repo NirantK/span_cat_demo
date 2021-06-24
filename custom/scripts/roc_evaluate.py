@@ -17,7 +17,7 @@ from spacy.tokens import Doc
 from spacy.scorer import Scorer
 from spacy import util
 from spacy import displacy
-
+import numpy as np
 
 # # @app.command("roc_evaluate")
 # def evaluate_cli(
@@ -167,8 +167,11 @@ def direct_evaluate(
         for key, value in data.items():
             serialize_data[key] = value
             if isinstance(serialize_data[key], Ragged):
-                print(key, type(value), value)
+                # print(key, type(value), value)
                 serialize_data[key] = to_numpy(value).tolist()
+            if isinstance(serialize_data[key], np.ndarray):
+                print(key, type(value), value)
+                serialize_data[key] = value.tolist()
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
     return data
