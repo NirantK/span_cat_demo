@@ -167,13 +167,11 @@ def direct_evaluate(
         for key, value in data.items():
             serialize_data[key] = value
             if isinstance(serialize_data[key], Ragged):
-                # print(key, type(value), value)
                 serialize_data[key] = to_numpy(value).tolist()
             if isinstance(serialize_data[key], np.ndarray):
                 serialize_data[key] = value.tolist()
-                # print(key, type(serialize_data[key]), type(serialize_data[key][0]))
-            print(key, type(serialize_data[key]))
         srsly.write_json(output_path, serialize_data)
+        print(output_path)
         msg.good(f"Saved results to {output_path}")
     return data
 
