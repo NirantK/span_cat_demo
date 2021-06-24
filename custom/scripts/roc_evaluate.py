@@ -164,7 +164,6 @@ def direct_evaluate(
    
     if output_path is not None:
         serialize_data = {}
-        print(output_path)
         for key, value in data.items():
             serialize_data[key] = value
             if isinstance(serialize_data[key], Ragged):
@@ -174,6 +173,7 @@ def direct_evaluate(
         srsly.write_json(output_path, serialize_data)
         with output_path.open("w") as f:
             json.dump(serialize_data, f)
+            print(f"Wrote to {output_path}")
         msg.good(f"Saved results to {output_path}")
 
     return serialize_data
