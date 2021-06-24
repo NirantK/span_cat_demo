@@ -3,7 +3,7 @@ from thinc.model import serialize_attr
 import typer
 import spacy
 from spacy.tokens import DocBin
-
+import json
 from typing import Optional, List, Dict
 from wasabi import Printer
 from pathlib import Path
@@ -171,8 +171,11 @@ def direct_evaluate(
             if isinstance(serialize_data[key], np.ndarray):
                 serialize_data[key] = value.tolist()
         srsly.write_json(output_path, serialize_data)
+        with output_path.open("w") as f:
+            json.dump(serialize_data, f)
         msg.good(f"Saved results to {output_path}")
-    return data
+
+    return serialize_data
 
 def render_parses(
     docs: List[Doc],
