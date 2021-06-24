@@ -62,7 +62,7 @@ from thinc.api import to_numpy
 def direct_evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path] = None,
+    output: Optional[Path]
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
@@ -164,6 +164,7 @@ def direct_evaluate(
    
     if output_path is not None:
         serialize_data = {}
+        print(output_path)
         for key, value in data.items():
             serialize_data[key] = value
             if isinstance(serialize_data[key], Ragged):
