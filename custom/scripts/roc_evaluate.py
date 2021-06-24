@@ -99,7 +99,8 @@ def direct_evaluate(
         "SPAN R": f"spans_{spans_key}_r",
         "SPAN F": f"spans_{spans_key}_f",
         "SPEED": "speed",
-        "PREDICTIONS": "preds"
+        "INDICES": "indices",
+        "SCORES": "scores"
     }
     results = {}
     data = {}
@@ -112,8 +113,6 @@ def direct_evaluate(
                     results[metric] = f"{scores[key]:.0f}"
                 else:
                     results[metric] = f"{scores[key]*100:.2f}"
-            if isinstance(scores[key],Ragged):
-                results[metric] == scores[key].tolist()
             else:
                 results[metric] = "-"
             data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
@@ -159,7 +158,11 @@ def direct_evaluate(
             ents=render_ents,
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
-
+    
+    if "INDICES" in data.keys:
+        data["INDICES"] = data["INDICES"].tolist()
+        data["SCORES"]=data["SCORES"].tolist()
+    
     if output_path is not None:
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
