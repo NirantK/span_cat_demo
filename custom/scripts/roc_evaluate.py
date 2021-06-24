@@ -159,11 +159,13 @@ def direct_evaluate(
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     
-    if "INDICES" in data.keys():
-        data["INDICES"] = data["INDICES"].tolist()
-        data["SCORES"]=data["SCORES"].tolist()
-    
+   
     if output_path is not None:
+        if "INDICES" in data.keys():
+            data["INDICES"] = data["INDICES"].tolist()
+            data["SCORES"] = data["SCORES"].tolist()
+            srsly.write_json(".", data["INDICES"])
+            srsly.write_json(".", data["SCORES"])
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
     return data
