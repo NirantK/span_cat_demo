@@ -169,7 +169,7 @@ def direct_evaluate(
             if isinstance(serialize_data[key], Ragged):
                 # print(key, type(value), value)
                 serialize_data[key] = to_numpy(value).tolist()
-            if key == "scores":
+            if isinstance(serialize_data[key], np.array) or isinstance(serialize_data[key], np.ndarray):
                 serialize_data[key] = value.tolist()
                 print(key, type(serialize_data[key]), type(serialize_data[key][0]))
         srsly.write_json(output_path, data)
