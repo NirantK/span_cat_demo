@@ -62,7 +62,7 @@ from thinc.api import to_numpy
 def direct_evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path]
+    output: Optional[Path],
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
