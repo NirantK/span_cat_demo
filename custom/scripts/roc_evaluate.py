@@ -1,4 +1,5 @@
 from pathlib import Path
+from thinc.model import serialize_attr
 import typer
 import spacy
 from spacy.tokens import DocBin
@@ -161,11 +162,11 @@ def direct_evaluate(
     
    
     if output_path is not None:
-        if "INDICES" in data.keys():
-            data["INDICES"] = data["INDICES"].tolist()
-            data["SCORES"] = data["SCORES"].tolist()
-            srsly.write_json(".", data["INDICES"])
-            srsly.write_json(".", data["SCORES"])
+        serialize_data = {}
+        for key, value in data.items():
+            serialize_data[key] = value
+            if isinstance(serialize_data[key], Ragged):
+                serialize_data[key] = value.tolist()
         srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
     return data
