@@ -55,7 +55,8 @@ from spacy import displacy
 #         silent=False,
 #     )
 
-
+from thinc.api import Ragged
+ 
 def direct_evaluate(
     model: str,
     data_path: Path,
@@ -111,6 +112,8 @@ def direct_evaluate(
                     results[metric] = f"{scores[key]:.0f}"
                 else:
                     results[metric] = f"{scores[key]*100:.2f}"
+            if isinstance(scores[key],Ragged):
+                results[metric] == scores[key].tolist()
             else:
                 results[metric] = "-"
             data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
