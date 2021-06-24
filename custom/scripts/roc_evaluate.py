@@ -173,7 +173,7 @@ def direct_evaluate(
                 serialize_data[key] = value.tolist()
                 # print(key, type(serialize_data[key]), type(serialize_data[key][0]))
             print(key, type(serialize_data[key]))
-        srsly.write_json(output_path, data)
+        srsly.write_json(output_path, serialize_data)
         msg.good(f"Saved results to {output_path}")
     return data
 
