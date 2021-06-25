@@ -56,13 +56,11 @@ import numpy as np
 #         silent=False,
 #     )
 
-from thinc.types import Ragged
-from thinc.api import to_numpy
- 
-def evaluate_custom(
+def evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path],
+    output: Optional[Path] = None,
+    use_gpu: int = -1,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
     displacy_limit: int = 25,
@@ -159,15 +157,11 @@ def evaluate_custom(
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     
-   
     if output_path is not None:
-        srsly.write_json(output_path, serialize_data)
-        with output_path.open("w") as f:
-            json.dump(data, f)
-            print(f"Wrote to {output_path}")
+        srsly.write_json(output_path, data)
         msg.good(f"Saved results to {output_path}")
+    return data
 
-    return serialize_data
 
 def render_parses(
     docs: List[Doc],
@@ -238,4 +232,4 @@ def print_textcats_auc_per_cat(
 
 
 if __name__ == "__main__":
-    typer.run(evaluate_custom)
+    typer.run(evaluate)
