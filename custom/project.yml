@@ -22,7 +22,8 @@ assets:
     dest: "assets/conll2003/dev.iob"
   - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/test.txt"
     dest: "assets/conll2003/test.iob"
-  workflows:
+
+workflows:
   all:
     - corpus
     - train
