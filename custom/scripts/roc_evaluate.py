@@ -59,7 +59,7 @@ import numpy as np
 from thinc.types import Ragged
 from thinc.api import to_numpy
  
-def direct_evaluate(
+def evaluate_custom(
     model: str,
     data_path: Path,
     output: Optional[Path],
@@ -101,8 +101,6 @@ def direct_evaluate(
         "SPAN R": f"spans_{spans_key}_r",
         "SPAN F": f"spans_{spans_key}_f",
         "SPEED": "speed",
-        "INDICES": "indices",
-        "SCORES": "scores"
     }
     results = {}
     data = {}
@@ -163,16 +161,9 @@ def direct_evaluate(
     
    
     if output_path is not None:
-        serialize_data = {}
-        for key, value in data.items():
-            serialize_data[key] = value
-            if isinstance(serialize_data[key], Ragged):
-                serialize_data[key] = to_numpy(value).tolist()
-            if isinstance(serialize_data[key], np.ndarray):
-                serialize_data[key] = value.tolist()
         srsly.write_json(output_path, serialize_data)
         with output_path.open("w") as f:
-            json.dump(serialize_data, f)
+            json.dump(data, f)
             print(f"Wrote to {output_path}")
         msg.good(f"Saved results to {output_path}")
 
@@ -247,4 +238,4 @@ def print_textcats_auc_per_cat(
 
 
 if __name__ == "__main__":
-    typer.run(direct_evaluate)
+    typer.run(evaluate_custom)
