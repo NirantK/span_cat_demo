@@ -4,13 +4,13 @@ import typer
 import spacy
 from spacy.tokens import DocBin
 import json
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 from wasabi import Printer
 from pathlib import Path
 import re
 import srsly
 from thinc.api import fix_random_seed
-
+from thinc.types import Ragged, Ints1d
 from spacy.training import Corpus
 from spacy.tokens import Doc
 # from spacy._util import app, Arg, Opt, setup_gpu, import_code
@@ -18,6 +18,7 @@ from spacy.scorer import Scorer
 from spacy import util
 from spacy import displacy
 import numpy as np
+import json
 
 # # @app.command("roc_evaluate")
 # def evaluate_cli(
@@ -55,11 +56,15 @@ import numpy as np
 #         displacy_limit=displacy_limit,
 #         silent=False,
 #     )
+from thinc.api import to_numpy
+
+def _ensure_cpu(spans: Ragged, lengths: Ints1d) -> Tuple[np.ndarray]:
+    return to_numpy(spans.dataXd), to_numpy(spans.lengths), to_numpy(lengths)
 
 def evaluate(
     model: str,
     data_path: Path,
-    output: Optional[Path] = None,
+    output: Optional[Path],
     use_gpu: int = -1,
     gold_preproc: bool = False,
     displacy_path: Optional[Path] = None,
@@ -80,29 +85,16 @@ def evaluate(
     nlp = util.load_model(model)
     dev_dataset = list(corpus(nlp))
     scores = nlp.evaluate(dev_dataset)
-    metrics = {
-        "TOK": "token_acc",
-        "TAG": "tag_acc",
-        "POS": "pos_acc",
-        "MORPH": "morph_acc",
-        "LEMMA": "lemma_acc",
-        "UAS": "dep_uas",
-        "LAS": "dep_las",
-        "NER P": "ents_p",
-        "NER R": "ents_r",
-        "NER F": "ents_f",
-        "TEXTCAT": "cats_score",
-        "SENT P": "sents_p",
-        "SENT R": "sents_r",
-        "SENT F": "sents_f",
-        "SPAN P": f"spans_{spans_key}_p",
-        "SPAN R": f"spans_{spans_key}_r",
-        "SPAN F": f"spans_{spans_key}_f",
-        "SPEED": "speed",
-        "SCORES": "scores", 
-        "INDICES": "indices"
-    }
     data = {}
+    pred_indices, pred_scores = scores["indices"], scores["scores"]
+    pred_spans, pred_span_lengths, pred_scores = _ensure_cpu(pred_indices, pred_scores)
+    pred_spans = pred_spans.tolist()
+    pred_span_lengths = pred_span_lengths.tolist()
+    pred_scores = pred_scores.tolist()
+    data["spans"] = str(pred_spans)
+    data["span_lengths"] = str(pred_span_lengths)
+    data["scores"] = str(pred_scores)
+    
     if "morph_per_feat" in scores:
         if scores["morph_per_feat"]:
             print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
@@ -127,29 +119,11 @@ def evaluate(
         if scores["cats_auc_per_type"]:
             print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
             data["cats_auc_per_type"] = scores["cats_auc_per_type"]
-
-    if "scores" in scores:
-        scores_type = type(scores["scores"])
-        msg.good(f"Hell yeah, {scores_type}")
-
-    if displacy_path:
-        factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
-        docs = list(nlp.pipe(ex.reference.text for ex in dev_dataset[:displacy_limit]))
-        render_deps = "parser" in factory_names
-        render_ents = "ner" in factory_names
-        render_parses(
-            docs,
-            displacy_path,
-            model_name=model,
-            limit=displacy_limit,
-            deps=render_deps,
-            ents=render_ents,
-        )
-        msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     
-    assert output_path is not None
-    srsly.write_json(output_path, data)
-    msg.good(f"Saved results to {output_path}")
+    if output_path is not None:
+        srsly.write_json(output_path, data)
+        # srsly.write_json(output_path, predictions)
+        msg.good(f"Saved results to {output_path}")
     return data
 
 
