@@ -99,24 +99,10 @@ def evaluate(
         "SPAN R": f"spans_{spans_key}_r",
         "SPAN F": f"spans_{spans_key}_f",
         "SPEED": "speed",
+        "SCORES": "scores", 
+        "INDICES": "indices"
     }
-    results = {}
     data = {}
-    for metric, key in metrics.items():
-        if key in scores:
-            if key == "cats_score":
-                metric = metric + " (" + scores.get("cats_score_desc", "unk") + ")"
-            if isinstance(scores[key], (int, float)):
-                if key == "speed":
-                    results[metric] = f"{scores[key]:.0f}"
-                else:
-                    results[metric] = f"{scores[key]*100:.2f}"
-            else:
-                results[metric] = "-"
-            data[re.sub(r"[\s/]", "_", key.lower())] = scores[key]
-
-    msg.table(results, title="Results")
-
     if "morph_per_feat" in scores:
         if scores["morph_per_feat"]:
             print_prf_per_type(msg, scores["morph_per_feat"], "MORPH", "feat")
@@ -142,6 +128,10 @@ def evaluate(
             print_textcats_auc_per_cat(msg, scores["cats_auc_per_type"])
             data["cats_auc_per_type"] = scores["cats_auc_per_type"]
 
+    if "scores" in scores:
+        scores_type = type(scores["scores"])
+        msg.good(f"Hell yeah, {scores_type}")
+
     if displacy_path:
         factory_names = [nlp.get_pipe_meta(pipe).factory for pipe in nlp.pipe_names]
         docs = list(nlp.pipe(ex.reference.text for ex in dev_dataset[:displacy_limit]))
@@ -157,9 +147,9 @@ def evaluate(
         )
         msg.good(f"Generated {displacy_limit} parses as HTML", displacy_path)
     
-    if output_path is not None:
-        srsly.write_json(output_path, data)
-        msg.good(f"Saved results to {output_path}")
+    assert output_path is not None
+    srsly.write_json(output_path, data)
+    msg.good(f"Saved results to {output_path}")
     return data
 
 
