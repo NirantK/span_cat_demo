@@ -28,6 +28,7 @@ workflows:
     - corpus
     - train
     - evaluate
+    - roc_evaluate
 
 # Project commands, specified in a style similar to CI config files (e.g. Azure
 # pipelines). The name is the command name that lets you trigger the command
@@ -75,15 +76,15 @@ commands:
     outputs:
       - "metrics/${vars.config}.json"
   
-  # - name: roc_evaluate
-  #   help: "Calculate the ROC-AUC scores, plots"
-  #   script:
-  #     - "python scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy ./metrics/${vars.config}_roc.json"
-  #   deps:
-  #     - "training/model-best"
-  #     - "corpus/test.spacy"
-  #   outputs:
-  #     - "metrics/${vars.config}.json"
+  - name: roc_evaluate
+    help: "Calculate the ROC-AUC scores, plots"
+    script:
+      - "python scripts/roc_evaluate.py ./training/model-best ./corpus/test.spacy ./metrics/${vars.config}_roc.json"
+    deps:
+      - "training/model-best"
+      - "corpus/test.spacy"
+    outputs:
+      - "metrics/${vars.config}.json"
 
   - name: clean
     help: "Remove intermediate files"
