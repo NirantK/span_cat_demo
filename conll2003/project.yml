@@ -10,16 +10,17 @@ vars:
 
 # These are the directories that the project needs. The project CLI will make
 # sure that they always exist.
-directories: ["assets", "training", "configs", "metrics", "metrics", "corpus", "packages"]
+directories: ["assets", "training", "configs", "metrics", "corpus", "packages"]
 
 # Assets that should be downloaded or available in the directory. We're shipping
 # them with the project, so they won't have to be downloaded.
 
 assets:
+  # - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
+  - url: "https://raw.githubusercontent.com/NirantK/dummydata/main/train.txt"
+    dest: "assets/conll2003/train.iob"
   - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/valid.txt"
     dest: "assets/conll2003/dev.iob"
-  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
-    dest: "assets/conll2003/train.iob"
   - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/test.txt"
     dest: "assets/conll2003/test.iob"
 
