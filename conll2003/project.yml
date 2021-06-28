@@ -16,8 +16,8 @@ directories: ["assets", "training", "configs", "metrics", "corpus", "packages"]
 # them with the project, so they won't have to be downloaded.
 
 assets:
-  # - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
-  - url: "https://raw.githubusercontent.com/NirantK/dummydata/main/train.txt"
+  - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/train.txt"
+  # - url: "https://raw.githubusercontent.com/NirantK/dummydata/main/train.txt"
     dest: "assets/conll2003/train.iob"
   - url: "https://raw.githubusercontent.com/ningshixian/NER-CONLL2003/master/data/valid.txt"
     dest: "assets/conll2003/dev.iob"
