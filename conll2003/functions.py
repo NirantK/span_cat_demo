@@ -1,7 +1,9 @@
 from spacy import registry
 from spacy.tokens import Doc
-from typing import List, Callable
+from typing import List, Callable, Optional
 from thinc.types import Ragged
+from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
+
 
 @registry.misc("ngram_suggester.v2")
 def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
