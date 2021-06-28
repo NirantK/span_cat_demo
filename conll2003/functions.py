@@ -1,9 +1,11 @@
+import spacy
 from spacy import registry
-from spacy.tokens import Doc
+from spacy.tokens import Doc, DocBin
 from typing import List, Callable, Optional
 from thinc.types import Ragged
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
-
+from pathlib import Path
+import numpy as np
 
 @registry.misc("ngram_suggester.v2")
 def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
@@ -15,6 +17,7 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
         if ops is None:
             ops = get_current_ops()
         spans = []
+        nlp = spacy.load("en_core_web_sm")
         lengths = []
         for doc in docs:
             starts = ops.xp.arange(len(doc), dtype="i")
@@ -27,6 +30,13 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
+
+            new_doc = nlp(doc.text)
+            for chunk in new_doc.noun_chunks:
+                start, end = chunk.start, chunk.end
+                spans.append(np.array([start, end]))
+                length += 1
+            
             lengths.append(length)
 
         if len(spans) > 0:
