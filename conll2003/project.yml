@@ -59,7 +59,7 @@ commands:
   - name: train
     help: "Train the pipeline"
     script:
-      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy"
+      - "python -m spacy train configs/${vars.config}.cfg -o training/ --gpu-id ${vars.gpu_id} --paths.train corpus/train.spacy --paths.dev corpus/dev.spacy --code functions.py"
     deps:
       - "corpus/train.spacy"
       - "corpus/dev.spacy"
@@ -70,7 +70,7 @@ commands:
   - name: evaluate
     help: "Evaluate on the test data and save the metrics"
     script:
-      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu_id}"
+      - "python -m spacy evaluate ./training/model-best ./corpus/test.spacy --output ./metrics/${vars.config}.json --gpu-id ${vars.gpu_id} --code functions.py"
     deps:
       - "training/model-best"
       - "corpus/test.spacy"
