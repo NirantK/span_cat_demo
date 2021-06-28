@@ -1,4 +1,5 @@
 from spacy import registry
+from spacy.tokens import Doc
 from typing import List, Callable
 from thinc.types import Ragged
 
