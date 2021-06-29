@@ -43,6 +43,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             for size in sizes:
                 if size <= len(doc):
                     starts_size = starts[:len(doc) - (size - 1)]
+                    print(len(starts_size))
                     spans.append(ops.xp.hstack((starts_size, starts_size + size)))
                     length += spans[-1].shape[0]
                 if spans:
