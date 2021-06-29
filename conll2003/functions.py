@@ -93,15 +93,15 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
             
-            new_doc = nlp(doc.text)
-            for chunk in new_doc.noun_chunks:
-                char_start, char_end = chunk.start_char, chunk.end_char
-                span = doc.char_span(char_start, char_end)
-                if span is not None:
-                    # start, end = span.start, span.end
-                    spans.append(ops.xp.hstack((span.start, span.end)))
-                    length += 1
-            lengths.append(length)
+            # new_doc = nlp(doc.text)
+            # for chunk in new_doc.noun_chunks:
+            #     char_start, char_end = chunk.start_char, chunk.end_char
+            #     span = doc.char_span(char_start, char_end)
+            #     if span is not None:
+            #         # start, end = span.start, span.end
+            #         spans.append(ops.xp.hstack((span.start, span.end)))
+            #         length += 1
+            # lengths.append(length)
 
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
