@@ -54,7 +54,8 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         for doc in docs:
             matches = matcher(doc, as_spans=True)
             for span in matches:
-                element = np.array([span.start, span.end])
+                element = ops.xp.hstack((span.start, span.end))
+                print(type(element), element.shape)
                 spans.append(element)
 
         if len(spans) > 0:
