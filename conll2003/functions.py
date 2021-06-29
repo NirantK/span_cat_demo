@@ -30,8 +30,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         train_ents_vocab = set()
         for doc in train_docs:
             for ent in doc.ents:
-                span = doc.char_span(ent.start_char, ent.end_char, label=ent.label_)
-                train_ents_vocab.add(span)
+                train_ents_vocab.add(ent.text)
                 
         for doc in docs:
         
