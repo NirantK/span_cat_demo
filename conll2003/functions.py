@@ -32,9 +32,11 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
                     assert spans[-1].ndim == 2, spans[-1].shape
 
             new_doc = nlp(doc.text)
+            assert len(doc) == len(new_doc)
             for chunk in new_doc.noun_chunks:
                 start, end = chunk.start, chunk.end
-                spans.append(np.array([start, end]))
+                assert end < len(doc)
+                spans.append(ops.xp.hstack((start, end)))
                 length += 1
             
             lengths.append(length)
