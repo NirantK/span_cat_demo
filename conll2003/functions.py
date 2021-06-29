@@ -58,15 +58,15 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 noun_spans.append(ops.xp.hstack((span.start, span.end)))
                 length += spans[-1].shape[0] 
             lengths.append(length)
-        
+
+        # if len(spans) > 0:
+        #     spans = ops.xp.vstack(spans)
+        # else:
+        #     spans = ops.xp.zeros((0,0))
+        spans = [item for sublist in spans for item in sublist]
+        # spans = list(to_numpy(spans))
         print(spans[-1], spans[-1].shape)
 
-        if len(spans) > 0:
-            spans = ops.xp.vstack(spans)
-        else:
-            spans = ops.xp.zeros((0,0))
-
-       
         if len(spans) > 0:
             output = Ragged(spans,  ops.asarray(lengths, dtype="i"))
         else:
