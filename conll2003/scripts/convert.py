@@ -11,7 +11,7 @@ def main(loc: Path, lang: str, spans_key: str):
     overlapping or nested annotations, which can't be represented on the
     per-token level.
     """
-    nlp = spacy.load("en_core_web_sm")
+    nlp = spacy.blank("en")
     docbin = DocBin().from_disk(loc)
     docs = list(docbin.get_docs(nlp.vocab))
     for doc in docs:
