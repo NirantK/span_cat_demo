@@ -19,56 +19,88 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             ops = get_current_ops()
         spans = []
         lengths = []
-    
-        # I want to load the train docs and get the plain text for all their entities. 
-        # Once I've the plain text, I can use a matcher to find the start, end token pair in the target doc
-        assert train_corpus.exists()
-
-        nlp = spacy.blank("en") 
-        docbin = DocBin().from_disk(train_corpus)
-        train_docs = list(docbin.get_docs(nlp.vocab))
-        patterns = set()
-        for doc in train_docs:
-            for ent in doc.ents:
-                patterns.add(nlp(ent.text))
-                
-        matcher = PhraseMatcher(nlp.vocab)
-        matcher.add("ENT", list(patterns))
-
         for doc in docs:
             starts = ops.xp.arange(len(doc), dtype="i")
             starts = starts.reshape((-1, 1))
             length = 0
-        
             for size in sizes:
                 if size <= len(doc):
-                    starts_size = starts[:len(doc) - (size - 1)]
+                    starts_size = starts[: len(doc) - (size - 1)]
                     spans.append(ops.xp.hstack((starts_size, starts_size + size)))
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
-        
-        # noun_spans = []            
-        # for doc in docs:
-        #     matches = matcher(doc, as_spans=True)
-        #     for span in matches:
-        #         # print(span)
-        #         noun_spans.append(ops.xp.hstack((span.start, span.end)))
-        #         length += spans[-1].shape[0] 
-        #     lengths.append(length)
-
-        # spans = [item for sublist in spans for item in sublist]
-        # spans += noun_spans
-        
+            lengths.append(length)
         if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans),  ops.asarray(lengths, dtype="i"))
+            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
         else:
-            output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
+            output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
 
         assert output.dataXd.ndim == 2
         return output
 
     return ngram_suggester
+
+# def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
+#     """Suggest all spans of the given lengths. Spans are returned as a ragged
+#     array of integers. The array has two columns, indicating the start and end
+#     position."""
+
+#     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+#         if ops is None:
+#             ops = get_current_ops()
+#         spans = []
+#         lengths = []
+    
+#         # I want to load the train docs and get the plain text for all their entities. 
+#         # Once I've the plain text, I can use a matcher to find the start, end token pair in the target doc
+#         assert train_corpus.exists()
+
+#         nlp = spacy.blank("en") 
+#         docbin = DocBin().from_disk(train_corpus)
+#         train_docs = list(docbin.get_docs(nlp.vocab))
+#         patterns = set()
+#         for doc in train_docs:
+#             for ent in doc.ents:
+#                 patterns.add(nlp(ent.text))
+                
+#         matcher = PhraseMatcher(nlp.vocab)
+#         matcher.add("ENT", list(patterns))
+
+#         for doc in docs:
+#             starts = ops.xp.arange(len(doc), dtype="i")
+#             starts = starts.reshape((-1, 1))
+#             length = 0
+        
+#             for size in sizes:
+#                 if size <= len(doc):
+#                     starts_size = starts[:len(doc) - (size - 1)]
+#                     spans.append(ops.xp.hstack((starts_size, starts_size + size)))
+#                     length += spans[-1].shape[0]
+#                 if spans:
+#                     assert spans[-1].ndim == 2, spans[-1].shape
+        
+#         # noun_spans = []            
+#         # for doc in docs:
+#         #     matches = matcher(doc, as_spans=True)
+#         #     for span in matches:
+#         #         # print(span)
+#         #         noun_spans.append(ops.xp.hstack((span.start, span.end)))
+#         #         length += spans[-1].shape[0] 
+#         #     lengths.append(length)
+
+#         # spans = [item for sublist in spans for item in sublist]
+#         # spans += noun_spans
+        
+#         if len(spans) > 0:
+#             output = Ragged(ops.xp.vstack(spans),  ops.asarray(lengths, dtype="i"))
+#         else:
+#             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
+
+#         assert output.dataXd.ndim == 2
+#         return output
+
+#     return ngram_suggester
 
 @registry.misc("nounchunk_ngram_suggester.v1")
 def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
