@@ -52,7 +52,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                     length +=1
                     end = start + len(ent)
                     span = doc.char_span(start, end)
-                    spans.append(span.start, span.end)
+                    spans.append([span.start, span.end])
 
             lengths.append(length)
         
