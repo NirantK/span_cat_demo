@@ -13,24 +13,25 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
+    
+    # Prepare matcher
+    nlp = spacy.blank("en") 
+    docbin = DocBin().from_disk(train_corpus)
+    train_docs = list(docbin.get_docs(nlp.vocab))
+    patterns = set()
+    for doc in train_docs:
+        for ent in doc.ents:
+            patterns.add(nlp.make_doc(ent.text))
+            
+    matcher = PhraseMatcher(nlp.vocab)
+    matcher.add("ENT", list(patterns))
+
 
     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
         spans = []
         lengths = []
-
-        # Prepare matcher
-        nlp = spacy.blank("en") 
-        docbin = DocBin().from_disk(train_corpus)
-        train_docs = list(docbin.get_docs(nlp.vocab))
-        patterns = set()
-        for doc in train_docs:
-            for ent in doc.ents:
-                patterns.add(nlp(ent.text))
-                
-        matcher = PhraseMatcher(nlp.vocab)
-        matcher.add("ENT", list(patterns))
 
         for doc in docs:
             starts = ops.xp.arange(len(doc), dtype="i")
