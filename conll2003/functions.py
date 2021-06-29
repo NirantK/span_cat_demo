@@ -1,6 +1,7 @@
 import spacy
 from spacy import registry
 from spacy.tokens import Doc, DocBin, Span
+from spacy.matcher import PhraseMatcher
 from typing import List, Callable, Optional
 from thinc.types import Ragged
 from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
@@ -26,14 +27,15 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         nlp = spacy.blank("en") 
         docbin = DocBin().from_disk(train_corpus)
         train_docs = list(docbin.get_docs(nlp.vocab))
-
-        train_ents_vocab = set()
+        patterns = set()
         for doc in train_docs:
             for ent in doc.ents:
-                train_ents_vocab.add(ent.text)
+                patterns.add(nlp(ent.text))
                 
+        matcher = PhraseMatcher(nlp.vocab)
+        matcher.add("ENT", list(patterns))
+
         for doc in docs:
-        
             starts = ops.xp.arange(len(doc), dtype="i")
             starts = starts.reshape((-1, 1))
             length = 0
@@ -46,16 +48,10 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
 
-            for ent in train_ents_vocab:
-                start = doc.text.find(ent)
-                if start == -1:
-                    continue
-                end = start + len(ent)
-                span = doc.char_span(start, end)
-                if span is not None:
-                    spans.append(ops.xp.hstack((span.start, span.end)))
-                    length +=1
-            
+            matches = matcher(doc, as_spans=True)
+            for span in matches:
+                spans.append(ops.xp.hstack((span.start, span.end)))
+            length += spans[-1].shape[0] 
             lengths.append(length)
         
         # spans = np.array(list(set(spans)))
