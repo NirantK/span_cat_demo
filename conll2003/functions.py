@@ -101,7 +101,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             
 
             for chunk in new_doc.noun_chunks:
-                char_start, char_end = chunk.char_start, chunk.char_end
+                char_start, char_end = chunk.start_char, chunk.end_char
                 span = doc.char_span(char_start, char_end)
                 if span is not None:
                     # start, end = span.start, span.end
