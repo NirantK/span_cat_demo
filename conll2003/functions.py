@@ -48,11 +48,13 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
 
             for ent in train_ents_vocab:
                 start = doc.text.find(ent)
-                if start != -1:
-                    length +=1
-                    end = start + len(ent)
-                    span = doc.char_span(start, end)
-                    spans.append([span.start, span.end])
+                if start == -1:
+                    continue
+                length +=1
+                end = start + len(ent)
+                span = doc.char_span(start, end)
+                assert span is not None
+                spans.append([span.start, span.end])
 
             lengths.append(length)
         
