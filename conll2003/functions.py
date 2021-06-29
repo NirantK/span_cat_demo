@@ -18,6 +18,7 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
             ops = get_current_ops()
         spans = []
         nlp = spacy.load("en_core_web_sm")
+        docs = [nlp(x.text) for x in docs]
         lengths = []
         for doc in docs:
             starts = ops.xp.arange(len(doc), dtype="i")
