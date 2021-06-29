@@ -18,7 +18,6 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
             ops = get_current_ops()
         spans = []
         nlp = spacy.load("en_core_web_sm")
-        docs = [nlp(x.text) for x in docs]
         lengths = []
         for doc in docs:
             starts = ops.xp.arange(len(doc), dtype="i")
@@ -31,7 +30,13 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
-
+            
+            new_doc = nlp(doc.text)
+            try:
+                assert len(new_doc) == len(doc)
+            except AssertionError as ae:
+                raise AssertionError(f"Found new doc with {len(new_doc)} tokens while blank doc has {len(doc)} tokens.\n The original sentence: {doc.text}")
+            
             for chunk in doc.noun_chunks:
                 start, end = chunk.start, chunk.end
                 spans.append(ops.xp.hstack((start, end)))
