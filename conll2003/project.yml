@@ -41,7 +41,7 @@ commands:
     # Make sure we specify the branch in the command string, so that the
     # caching works correctly.
     script:
-      - "python -m spacy convert assets/conll2003 corpus/ -n 5"
+      - "python -m spacy convert assets/conll2003 corpus/ -n 2"
       - "python scripts/convert.py corpus/train.spacy ${vars.lang} ${vars.spans_key}"
       - "python scripts/convert.py corpus/dev.spacy ${vars.lang} ${vars.spans_key}"
       - "python scripts/convert.py corpus/test.spacy ${vars.lang} ${vars.spans_key}"
