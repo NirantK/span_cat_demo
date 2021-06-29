@@ -43,28 +43,25 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             for size in sizes:
                 if size <= len(doc):
                     starts_size = starts[:len(doc) - (size - 1)]
-                    # print(len(starts_size))
                     spans.append(ops.xp.hstack((starts_size, starts_size + size)))
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
-            # print(spans[-1], spans[-1].shape)
         
-        noun_spans = []            
-        for doc in docs:
-            matches = matcher(doc, as_spans=True)
-            for span in matches:
-                # print(span)
-                noun_spans.append(ops.xp.hstack((span.start, span.end)))
-                length += spans[-1].shape[0] 
-            lengths.append(length)
+        # noun_spans = []            
+        # for doc in docs:
+        #     matches = matcher(doc, as_spans=True)
+        #     for span in matches:
+        #         # print(span)
+        #         noun_spans.append(ops.xp.hstack((span.start, span.end)))
+        #         length += spans[-1].shape[0] 
+        #     lengths.append(length)
 
-        spans = [item for sublist in spans for item in sublist]
-        spans += noun_spans
+        # spans = [item for sublist in spans for item in sublist]
+        # spans += noun_spans
         
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans),  ops.asarray(lengths, dtype="i"))
-
         else:
             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
 
