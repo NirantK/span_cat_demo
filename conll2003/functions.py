@@ -51,12 +51,13 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         spans = flatten(spans)
         print(len(spans), spans[-1], spans[-1].shape, type(spans[-1]))
 
-        for doc in docs:
+        for idx, doc in enumerate(docs):
             matches = matcher(doc, as_spans=True)
             for span in matches:
                 element = ops.xp.hstack((span.start, span.end))
                 print(type(element), element.shape)
                 spans.append(element)
+                lengths[idx]+=1
 
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
