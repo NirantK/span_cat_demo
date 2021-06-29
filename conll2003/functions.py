@@ -37,7 +37,7 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
             except AssertionError as ae:
                 print(f"Found new doc with {len(new_doc)} tokens while blank doc has {len(doc)} tokens.\n The original sentence: {doc.text}")
             
-            for chunk in doc.noun_chunks:
+            for chunk in new_doc.noun_chunks:
                 start, end = chunk.start, chunk.end
                 spans.append(ops.xp.hstack((start, end)))
                 length += 1
