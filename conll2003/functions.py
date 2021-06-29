@@ -69,8 +69,8 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
 
     return ngram_suggester
 
-@registry.misc("ngram_suggester.v2")
-def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
+@registry.misc("nounchunk_ngram_suggester.v1")
+def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
@@ -101,13 +101,11 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
             
 
             for chunk in new_doc.noun_chunks:
-                start, end = chunk.start, chunk.end
-                try:
-                    assert start <= len(doc)
-                    assert end <= len(doc)
-                    spans.append(ops.xp.hstack((start, end)))
-                except AssertionError as ae:
-                    print(f"{doc[start:end]}, {len()}, {ae}")
+                char_start, char_end = chunk.char_start, chunk.char_end
+                span = doc.char_span(char_start, char_end)
+                if span is not None:
+                    # start, end = span.start, span.end
+                    spans.append(ops.xp.hstack((span.start, span.end)))
                 length += 1
             lengths.append(length)
 
