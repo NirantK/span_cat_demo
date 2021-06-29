@@ -4,7 +4,7 @@ from spacy.tokens import Doc, DocBin, Span
 from spacy.matcher import PhraseMatcher
 from typing import List, Callable, Optional
 from thinc.types import Ragged
-from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops
+from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops, to_numpy
 from pathlib import Path
 import numpy as np
 
@@ -50,19 +50,23 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                     assert spans[-1].ndim == 2, spans[-1].shape
             # print(spans[-1], spans[-1].shape)
         
-        if len(spans) > 0:
-            spans = ops.xp.vstack(spans)
-        else:
-            spans = ops.xp.zeros((0,0))
-        
+        noun_spans = []            
         for doc in docs:
             matches = matcher(doc, as_spans=True)
             for span in matches:
                 # print(span)
-                spans.append(ops.xp.hstack((span.start, span.end)))
+                noun_spans.append(ops.xp.hstack((span.start, span.end)))
                 length += spans[-1].shape[0] 
             lengths.append(length)
         
+        print(spans[-1], spans[-1].shape)
+
+        if len(spans) > 0:
+            spans = ops.xp.vstack(spans)
+        else:
+            spans = ops.xp.zeros((0,0))
+
+       
         if len(spans) > 0:
             output = Ragged(spans,  ops.asarray(lengths, dtype="i"))
         else:
