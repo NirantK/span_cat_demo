@@ -101,7 +101,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             #         # start, end = span.start, span.end
             #         spans.append(ops.xp.hstack((span.start, span.end)))
             #         length += 1
-            # lengths.append(length)
+            lengths.append(length)
 
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
