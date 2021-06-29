@@ -48,20 +48,25 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
-            print(spans[-1], spans[-1].shape)
+            # print(spans[-1], spans[-1].shape)
+        
+        if len(spans) > 0:
+            spans = ops.xp.vstack(spans)
+        else:
+            spans = ops.xp.zeros((0,0))
+        
+        for doc in docs:
             matches = matcher(doc, as_spans=True)
             for span in matches:
                 # print(span)
                 spans.append(ops.xp.hstack((span.start, span.end)))
-                assert spans[-1].ndim == 2
                 length += spans[-1].shape[0] 
             lengths.append(length)
         
-        # spans = np.array(list(set(spans)))
         if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
+            output = Ragged(spans,  ops.asarray(lengths, dtype="i"))
         else:
-            output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
+            output = Ragged(spans, ops.asarray(lengths, dtype="i"))
 
         assert output.dataXd.ndim == 2
         return output
