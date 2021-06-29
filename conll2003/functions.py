@@ -27,17 +27,18 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         docbin = DocBin().from_disk(train_corpus)
         train_docs = list(docbin.get_docs(nlp.vocab))
 
-        train_spans = []
+        train_ents_vocab = set()
         for doc in train_docs:
             for ent in doc.ents:
                 span = doc.char_span(ent.start_char, ent.end_char, label=ent.label_)
-                train_spans.append(span)
-                print(f"Span: {span.text}, start: {span.start}, end: {span.end}")
-
+                train_ents_vocab.add(span)
+                
         for doc in docs:
+        
             starts = ops.xp.arange(len(doc), dtype="i")
             starts = starts.reshape((-1, 1))
             length = 0
+        
             for size in sizes:
                 if size <= len(doc):
                     starts_size = starts[:len(doc) - (size - 1)]
@@ -45,7 +46,16 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                     length += spans[-1].shape[0]
                 if spans:
                     assert spans[-1].ndim == 2, spans[-1].shape
-            
+
+            for ent in train_ents_vocab:
+                start = doc.text.find(ent)
+                if start != -1:
+                    length +=1
+                    end = start + len(ent)
+                    spans.append([start, end])
+
+            lengths.append(length)
+        
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
         else:
