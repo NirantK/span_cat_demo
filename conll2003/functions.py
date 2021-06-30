@@ -47,9 +47,6 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
 
             lengths.append(length)
         
-        types = [type(ele) for ele in spans]
-        print(set(types))
-
         if len(spans) > 0:
             # element = ops.xp.vstack(spans)
             spans = ops.xp.asarray(spans)
