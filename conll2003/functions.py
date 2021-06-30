@@ -106,6 +106,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 if span is not None:
                     # start, end = span.start, span.end
                     spans_dict[idx].append(ops.xp.hstack((span.start, span.end)))
+                    print(spans_dict[idx])
                     lengths[idx] += 1
 
         if len(spans) > 0:
