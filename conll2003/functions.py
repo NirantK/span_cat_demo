@@ -106,7 +106,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             noun_lengths.append(noun_length)
             # lengths.append(length)
 
-        if len(spans) > 0:
+        if len(noun_spans) > 0:
             # element = ops.xp.vstack(spans)
             output = Ragged(ops.xp.vstack(noun_spans), ops.asarray(noun_lengths, dtype="i"))
         else:
