@@ -92,9 +92,9 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 if size <= len(doc):
                     starts_size = starts[:len(doc) - (size - 1)]
                     spans_dict[idx] = ops.xp.hstack((starts_size, starts_size + size))
-                    length += spans[-1].shape[0]
-                if spans:
-                    assert spans[-1].ndim == 2, spans[-1].shape
+                    length += spans[idx].shape[0]
+                # if spans:
+                    # assert spans[-1].ndim == 2, spans[-1].shape
             lengths.append(length)
         
             # spans_dict[idx] = flatten(spans_dict[idx])
