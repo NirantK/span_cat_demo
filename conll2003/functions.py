@@ -98,7 +98,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
             lengths.append(length)
         
             spans_dict[idx] = flatten(spans_dict[idx])
-            print(spans_dict[idx].shape)
+            print(spans_dict[idx])
             new_doc = nlp(doc.text)
             for chunk in new_doc.noun_chunks:
                 char_start, char_end = chunk.start_char, chunk.end_char
