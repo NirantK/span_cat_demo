@@ -83,16 +83,16 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         nlp = spacy.load("en_core_web_sm")
         lengths, noun_lengths = [], []
         for doc in docs:
-            starts = ops.xp.arange(len(doc), dtype="i")
-            starts = starts.reshape((-1, 1))
-            length = 0
-            for size in sizes:
-                if size <= len(doc):
-                    starts_size = starts[:len(doc) - (size - 1)]
-                    spans.append(ops.xp.hstack((starts_size, starts_size + size)))
-                    length += spans[-1].shape[0]
-                if spans:
-                    assert spans[-1].ndim == 2, spans[-1].shape
+            # starts = ops.xp.arange(len(doc), dtype="i")
+            # starts = starts.reshape((-1, 1))
+            # length = 0
+            # for size in sizes:
+            #     if size <= len(doc):
+            #         starts_size = starts[:len(doc) - (size - 1)]
+            #         spans.append(ops.xp.hstack((starts_size, starts_size + size)))
+            #         length += spans[-1].shape[0]
+            #     if spans:
+            #         assert spans[-1].ndim == 2, spans[-1].shape
             
             new_doc = nlp(doc.text)
             noun_length = 0
@@ -104,14 +104,11 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                     noun_spans.append([span.start, span.end])
                     noun_length += 1
             noun_lengths.append(noun_length)
-            lengths.append(length)
+            # lengths.append(length)
 
         if len(spans) > 0:
-            element = ops.xp.vstack(spans)
-            nnp = ops.xp.vstack(noun_spans)
-            # print(type(element), type(nnp), element.shape, nnp.shape)
-            all_spans = ops.xp.concatenate((element, nnp), axis=0)
-            output = Ragged(all_spans, ops.asarray(lengths, dtype="i"))
+            # element = ops.xp.vstack(spans)
+            output = Ragged(ops.xp.vstack(noun_spans), ops.asarray(noun_lengths, dtype="i"))
         else:
             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
 
