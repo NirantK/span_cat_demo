@@ -75,40 +75,35 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
     array of integers. The array has two columns, indicating the start and end
     position."""
 
-    flatten = lambda t: [item for sublist in t for item in sublist]
-    
     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
         spans = []
-        spans_dict = dict()
         nlp = spacy.load("en_core_web_sm")
-        lengths = []
-        for idx, doc in enumerate(docs):
+        lengths, noun_lengths = [], []
+        for doc in docs:
             starts = ops.xp.arange(len(doc), dtype="i")
             starts = starts.reshape((-1, 1))
             length = 0
             for size in sizes:
                 if size <= len(doc):
                     starts_size = starts[:len(doc) - (size - 1)]
-                    spans_dict[idx] = [ops.xp.hstack((starts_size, starts_size + size))]
-                    length += spans_dict[idx][0].shape[0]
-                # if spans:
-                    # assert spans[-1].ndim == 2, spans[-1].shape
-            lengths.append(length)
-        
-            spans_dict[idx] = flatten(spans_dict[idx])
-            print(spans_dict[idx])
+                    spans.append(ops.xp.hstack((starts_size, starts_size + size)))
+                    length += spans[-1].shape[0]
+                if spans:
+                    assert spans[-1].ndim == 2, spans[-1].shape
+            
             new_doc = nlp(doc.text)
+            noun_spans, noun_length = [], 0
             for chunk in new_doc.noun_chunks:
                 char_start, char_end = chunk.start_char, chunk.end_char
                 span = doc.char_span(char_start, char_end)
                 if span is not None:
-                    # start, end = span.start, span.end
-                    element = ops.xp.hstack((span.start, span.end))
-                    spans_dict[idx].append(element)
-                    print(type(element), element)
-                    lengths[idx] += 1
+                    start, end = span.start, span.end
+                    noun_spans.append([span.start, span.end])
+                    noun_length += 1
+            noun_lengths.append(noun_length)
+            lengths.append(length)
 
         if len(spans) > 0:
             output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
