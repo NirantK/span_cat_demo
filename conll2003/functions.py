@@ -1,3 +1,4 @@
+from matplotlib.pyplot import axis
 import spacy
 from spacy import registry
 from spacy.tokens import Doc, DocBin, Span
@@ -108,9 +109,9 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
         if len(spans) > 0:
             element = ops.xp.vstack(spans)
             nnp = ops.xp.vstack(noun_spans)
-            print(type(element), type(nnp), element.shape, nnp.shape)
- 
-            output = Ragged(element, ops.asarray(lengths, dtype="i"))
+            # print(type(element), type(nnp), element.shape, nnp.shape)
+            all_spans = ops.xp.concatenate((element, nnp), axis=0)
+            output = Ragged(all_spans, ops.asarray(lengths, dtype="i"))
         else:
             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
 
