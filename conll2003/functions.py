@@ -79,37 +79,41 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
-        spans, noun_spans = [], []
+        spans, spans = [], []
         nlp = spacy.load("en_core_web_sm")
         lengths, noun_lengths = [], []
         for doc in docs:
-            # starts = ops.xp.arange(len(doc), dtype="i")
-            # starts = starts.reshape((-1, 1))
-            # length = 0
-            # for size in sizes:
-            #     if size <= len(doc):
-            #         starts_size = starts[:len(doc) - (size - 1)]
-            #         spans.append(ops.xp.hstack((starts_size, starts_size + size)))
-            #         length += spans[-1].shape[0]
-            #     if spans:
-            #         assert spans[-1].ndim == 2, spans[-1].shape
+            starts = ops.xp.arange(len(doc), dtype="i")
+            starts = starts.reshape((-1, 1))
+            length = 0
+            for size in sizes:
+                if size <= len(doc):
+                    starts_size = starts[:len(doc) - (size - 1)]
+                    spans.append(ops.xp.hstack((starts_size, starts_size + size)))
+                    length += spans[-1].shape[0]
+                if spans:
+                    assert spans[-1].ndim == 2, spans[-1].shape
             
-            new_doc = nlp(doc.text)
-            noun_length = 0
-            for chunk in new_doc.noun_chunks:
-                char_start, char_end = chunk.start_char, chunk.end_char
-                span = doc.char_span(char_start, char_end)
-                if span is not None:
-                    # start, end = span.start, span.end
-                    noun_spans.append([span.start, span.end])
-                    noun_length += 1
-            noun_lengths.append(noun_length)
-            # lengths.append(length)
+            lengths.append(length)
+            # new_doc = nlp(doc.text)
+            # noun_length = 0
+            # for chunk in new_doc.noun_chunks:
+            #     char_start, char_end = chunk.start_char, chunk.end_char
+            #     span = doc.char_span(char_start, char_end)
+            #     if span is not None:
+            #         # start, end = span.start, span.end
+            #         noun_spans.append([span.start, span.end])
+            #         noun_length += 1
+            # noun_lengths.append(noun_length)
 
-        if len(noun_spans) > 0:
-            element = ops.xp.vstack(noun_spans)
-            print(type(element), element.shape)
-            output = Ragged(element, ops.asarray(noun_lengths, dtype="i"))
+        if len(spans) > 0:
+                element = ops.xp.vstack(spans)
+                print(type(element), element.shape)
+                output = Ragged(element, ops.asarray(noun_lengths, dtype="i"))
+        # if len(noun_spans) > 0:
+        #     element = ops.xp.vstack(noun_spans)
+        #     print(type(element), element.shape)
+        #     output = Ragged(element, ops.asarray(noun_lengths, dtype="i"))
         else:
             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
 
