@@ -78,7 +78,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
-        spans = []
+        spans, noun_spans = [], []
         nlp = spacy.load("en_core_web_sm")
         lengths, noun_lengths = [], []
         for doc in docs:
@@ -94,19 +94,21 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                     assert spans[-1].ndim == 2, spans[-1].shape
             
             new_doc = nlp(doc.text)
-            noun_spans, noun_length = [], 0
+            noun_length = 0
             for chunk in new_doc.noun_chunks:
                 char_start, char_end = chunk.start_char, chunk.end_char
                 span = doc.char_span(char_start, char_end)
                 if span is not None:
-                    start, end = span.start, span.end
+                    # start, end = span.start, span.end
                     noun_spans.append([span.start, span.end])
                     noun_length += 1
             noun_lengths.append(noun_length)
             lengths.append(length)
 
         if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
+            element = ops.xp.vstack(spans)
+            print(type(element), element.shape)
+            output = Ragged(element, ops.asarray(lengths, dtype="i"))
         else:
             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
 
