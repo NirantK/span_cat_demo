@@ -16,6 +16,8 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
     array of integers. The array has two columns, indicating the start and end
     position."""
     
+    nlp = spacy.load("en_core_web_sm")
+
     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         if ops is None:
             ops = get_current_ops()
@@ -35,23 +37,21 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 # if spans:
                 #     assert spans[-1].ndim == 2, spans[-1].shape
 
-            # new_doc = nlp(doc.text)            
-            # for chunk in new_doc.noun_chunks:
-            #     char_start, char_end = chunk.start_char, chunk.end_char
-            #     span = doc.char_span(char_start, char_end)
-            #     doc_noun_spans = []
-            #     if span is not None:
-            #         doc_noun_spans.append(ops.xp.hstack(span.start, span.end]))
-            #         noun_length += 1
+            new_doc = nlp(doc.text)            
+            for chunk in new_doc.noun_chunks:
+                char_start, char_end = chunk.start_char, chunk.end_char
+                span = doc.char_span(char_start, char_end)
+                if span is not None:
+                    spans.append(ops.xp.asarray([span.start, span.end]))
+                    length += 1
 
-            # noun_lengths.append(noun_length)
             lengths.append(length)
 
-        spans = ops.xp.asarray(spans)
         if len(spans) > 0:
             # element = ops.xp.vstack(spans)
-            assert spans.shape[1] == 2
+            spans = ops.xp.asarray(spans)
             assert spans.ndim == 2
+            assert spans.shape[1] == 2
             output = Ragged(spans, ops.asarray(lengths, dtype="i"))
         else:
             output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
