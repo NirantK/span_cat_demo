@@ -11,7 +11,7 @@ import numpy as np
 
 
 @registry.misc("nounchunk_ngram_suggester.v1")
-def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
+def nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
@@ -19,12 +19,14 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
     nlp = spacy.load("en_core_web_sm")
 
     def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+
         if ops is None:
             ops = get_current_ops()
         spans = []
         lengths = []
 
         for doc in docs:
+            doc_spans = []
             starts = ops.xp.arange(len(doc), dtype="i")
             starts = starts.reshape((-1, 1))
             length, noun_length = 0, 0
@@ -32,26 +34,36 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
                 if size <= len(doc):
                     starts_size = starts[: len(doc) - (size - 1)]
                     ngrams = ops.xp.hstack((starts_size, starts_size + size))
-                    spans.extend([element for element in ngrams])
+                    doc_spans.extend([element for element in ngrams])
                     length += len(ngrams)
                 # if spans:
                 #     assert spans[-1].ndim == 2, spans[-1].shape
 
-            new_doc = nlp(doc.text)            
+            new_doc = nlp(doc.text)       
             for chunk in new_doc.noun_chunks:
                 char_start, char_end = chunk.start_char, chunk.end_char
                 span = doc.char_span(char_start, char_end)
                 if span is not None:
-                    spans.append(ops.xp.asarray([span.start, span.end]))
+                    assert (span.end - span.start) > 0
+                    element = ops.xp.asarray([span.start, span.end])
+                    assert len(element) == 2
+                    doc_spans.append(element)
                     length += 1
-
+            
+            assert length == len(doc_spans)
             lengths.append(length)
+            if length == 0:
+                raise ValueError("Length is 0")
+            spans.extend(ops.xp.array(doc_spans))
         
+        spans = list(set(spans))
         if len(spans) > 0:
             # element = ops.xp.vstack(spans)
-            spans = ops.xp.asarray(spans)
+            # print(type(spans), len(spans), len(lengths))
+            spans = ops.xp.array(spans)
+            assert len(spans) == sum(lengths)
+            # print(type(spans), len(spans), len(lengths))
             assert spans.ndim == 2
-            assert spans.shape[1] == 2
             output = Ragged(spans, ops.asarray(lengths, dtype="i"))
         else:
             output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
@@ -63,7 +75,7 @@ def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[Lis
 
 
 @registry.misc("train_ngram_suggester.v1")
-def build_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
+def train_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
