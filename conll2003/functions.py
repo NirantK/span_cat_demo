@@ -63,6 +63,9 @@ def from_spans(span_groups: List[List], docs: List[Doc], ops: Optional[Ops] = No
         lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
 
+
+
+
 @registry.misc("entity_suggester.v1")
 def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = True) -> Callable[[List[Doc], List[str]], Ragged]:
     """
@@ -94,7 +97,39 @@ def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = Tr
 
     return entity_suggester
 
+import random
 
+@registry.misc("random_span_suggester.v1")
+def build_random_spam_suggester(sizes: List)->Callable:
+
+    def random_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+        """
+        Suggests 2 spans at random from each doc of a random size from sizes
+        """
+        if ops is None:
+            ops = get_current_ops()
+
+        spans, lengths = [], []
+        for doc in docs: 
+            length = 0
+            token_count = len(doc)
+            doc_spans = []
+            while len(doc_spans) < 2 :
+                start = random.choice(population=range(token_count), k = 2)
+                size = random.choice(sizes, k =2)
+                end = start + size
+                if end > token_count:
+                    break
+                element = ops.xp.array([start, end])
+                doc_spans.append(element)
+                length += 1
+            if len(doc_spans) > 0:
+                spans.extend(doc_spans)
+                lengths.append(length)
+
+        return from_indices(spans, lengths, ops=ops)
+
+    return random_suggester
 @registry.misc("nounchunk_ngram_suggester.v1")
 def build_nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
