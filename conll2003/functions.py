@@ -101,6 +101,15 @@ import random
 
 @registry.misc("random_span_suggester.v1")
 def build_random_spam_suggester(sizes: List)->Callable:
+    """
+    Suggests random spans for each doc.
+
+    Args:
+        sizes (List): 
+
+    Returns:
+        Callable:
+    """
 
     def random_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         """
