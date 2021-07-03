@@ -107,6 +107,7 @@ def build_random_spam_suggester(sizes: List)->Callable:
     Returns:
         Callable:
     """
+    random.seed(37)
 
     def random_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
         """
