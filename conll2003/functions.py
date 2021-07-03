@@ -46,21 +46,56 @@ def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None)
 
     output = Ragged(indices, ops.asarray(lengths, dtype="i"))
     assert output.dataXd.ndim == 2
-
     return output
 
-def from_spans(spans: List, docs: List[Doc], *, ops: Optional[Ops] = None)->Ragged:
+def from_spans(span_groups: List[List], *, ops: Optional[Ops] = None)->Ragged:
     """
     Convert a list of spans into a Ragged object
     """
     if ops is None:
-        ops = get_current_ops()
+        raise ValueError(f"ops cannot be None")
     indices = []
     lengths = []
-    for doc, span in zip(docs, spans):
-        indices.append(ops.xp.array([span.start, span.end]))
-        lengths.append(span.end - span.start)
+    for spans in span_groups:
+        for span in spans:
+            indices.append(ops.xp.array([span.start, span.end]))
+        lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
+
+@registry.misc("entity_suggester.v1")
+def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = True)-> Callable[[List[Doc], List[str]], Ragged]:
+    """
+    Suggester which uses the spacy entity recognizer to suggest spans.
+    """
+    nlp = spacy.load(model)
+
+    def entity_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+        """
+        Suggests spans for each entity in the given docs.
+        """
+        span_groups = []
+
+        if ops is None:
+            ops = get_current_ops()
+
+        for doc in docs:
+            doc_spans = []
+            if make_diff_doc:
+                new_doc = nlp(doc.text)
+                for ent in new_doc.ents:
+                    span = doc.char_span(ent.char_start, ent.char_end)
+                    if span:
+                        doc_spans.append(span)
+            else:
+                for ent in doc.ents:
+                    span = doc.char_span(ent.char_start, ent.char_end)
+                    if span:
+                        doc_spans.append(span)
+            span_groups.append(doc_spans)
+    
+        return from_spans(span_groups, ops)
+
+    return entity_suggester
 
 
 @registry.misc("nounchunk_ngram_suggester.v1")
@@ -119,6 +154,7 @@ def nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[
         return output
 
     return ngram_suggester
+
 
 
 @registry.misc("train_ngram_suggester.v1")
