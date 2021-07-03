@@ -9,7 +9,7 @@ from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops, to_
 from pathlib import Path
 import numpy as np
 
-def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None)->Ragged:
+def from_indices(indices: List[Any], lengths:List, ops: Optional[Ops] = None)->Ragged:
     """
     Make Ragged spans for training and inference. 
     Used as a data type convertor in suggester for Span Categorizer
@@ -45,7 +45,7 @@ def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None)
     assert output.dataXd.ndim == 2
     return output
 
-def from_spans(span_groups: List[List], *, ops: Optional[Ops] = None)->Ragged:
+def from_spans(span_groups: List[List], ops: Optional[Ops] = None)->Ragged:
     """
     Convert a list of spans into a Ragged object
     """
