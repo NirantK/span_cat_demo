@@ -99,7 +99,7 @@ def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = Tr
 
 import random
 
-@registry.misc("random_span_suggester.v1")
+@registry.misc("random_suggester.v1")
 def build_random_spam_suggester(sizes: List)->Callable:
     """
     Suggests random spans for each doc.
@@ -124,8 +124,8 @@ def build_random_spam_suggester(sizes: List)->Callable:
             token_count = len(doc)
             doc_spans = []
             while len(doc_spans) < 2 :
-                start = random.choice(population=range(token_count), k = 2)
-                size = random.choice(sizes, k =2)
+                start = random.choice(range(token_count))
+                size = random.choice(sizes)
                 end = start + size
                 if end > token_count:
                     break
