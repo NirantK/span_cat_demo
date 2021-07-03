@@ -91,14 +91,16 @@ def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = Tr
 
 
 @registry.misc("nounchunk_ngram_suggester.v1")
-def nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
+def build_nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[[List[Doc]], Ragged]:
     """Suggest all spans of the given lengths. Spans are returned as a ragged
     array of integers. The array has two columns, indicating the start and end
     position."""
     
     nlp = spacy.load("en_core_web_sm")
 
-    def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+    def nounchunk_ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+        if ops is None:
+            ops = get_current_ops()  
 
         spans = []
         lengths = []
@@ -145,7 +147,7 @@ def nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Callable[
         assert output.dataXd.ndim == 2
         return output
 
-    return ngram_suggester
+    return nounchunk_ngram_suggester
 
 
 
