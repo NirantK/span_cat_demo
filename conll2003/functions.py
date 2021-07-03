@@ -80,7 +80,7 @@ def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = Tr
             if make_diff_doc:
                 doc = nlp(doc.text)
             for ent in doc.ents:
-                span = doc.char_span(ent.char_start, ent.char_end)
+                span = doc.char_span(ent.start_char, ent.end_char)
                 if span:
                     doc_spans.append(span)
             span_groups.append(doc_spans)
