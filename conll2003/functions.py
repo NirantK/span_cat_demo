@@ -45,7 +45,7 @@ def from_indices(indices: List[Any], lengths:List, ops: Optional[Ops] = None)->R
     assert output.dataXd.ndim == 2
     return output
 
-def from_spans(span_groups: List[List], ops: Optional[Ops] = None)->Ragged:
+def from_spans(span_groups: List[List], docs: List[Doc], ops: Optional[Ops] = None)->Ragged:
     """
     Convert a list of spans into a Ragged object
     """
@@ -53,9 +53,13 @@ def from_spans(span_groups: List[List], ops: Optional[Ops] = None)->Ragged:
         raise ValueError(f"ops cannot be None")
     indices = []
     lengths = []
-    for spans in span_groups:
+    for doc, spans in zip(docs, span_groups):
         for span in spans:
-            indices.append(ops.xp.array([span.start, span.end]))
+            start, end  = span.start, span.end
+            assert start < end 
+            assert end <= len(doc)
+            indices.append(ops.xp.array([start, end]))
+            
         lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
 
@@ -77,15 +81,16 @@ def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = Tr
 
         for doc in docs:
             doc_spans = []
-            if make_diff_doc:
-                doc = nlp(doc.text)
-            for ent in doc.ents:
-                span = doc.char_span(ent.start_char, ent.end_char)
-                if span:
+            new_doc = nlp(doc.text)       
+            for ent in new_doc.ents:
+                char_start, char_end = ent.start_char, ent.end_char
+                span = doc.char_span(char_start, char_end)
+                if span is not None:
                     doc_spans.append(span)
+
             span_groups.append(doc_spans)
     
-        return from_spans(span_groups, ops)
+        return from_spans(span_groups, docs, ops)
 
     return entity_suggester
 
