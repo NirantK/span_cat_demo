@@ -9,7 +9,7 @@ from thinc.api import Config, Model, get_current_ops, set_dropout_rate, Ops, to_
 from pathlib import Path
 import numpy as np
 
-def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None):
+def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None)->Ragged:
     """
     Make Ragged spans for training and inference. 
     Used as a data type convertor in suggester for Span Categorizer
@@ -25,24 +25,21 @@ def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None)
     Returns:
         Ragged: the Thinc datatype for training
     """
-    if ops is None:
-        ops = get_current_ops()
-
     # check if sum of lengths is same as length of indices, if not raise ValueError
     if not np.allclose(np.sum(lengths), len(indices)):
         raise ValueError("Sum of lengths of indices and lengths do not match.")
     
-    if len(indices) <= 0:
+    if len(indices) == 0:
         raise ValueError(f"There were no (start, end) pairs found. Check if indices input is empty")
     
     # check if any element is None, if yes raise ValueError
     if any(x is None for x in indices):
-        raise ValueError(f"There were (start, end) pairs with None values. Check if indices input is empty")
+        raise ValueError(f"There were (start, end) pairs with None values. Check if indices input is correct")
     
     if type(indices) == type([]) and type(indices[-1]) == type(ops.xp.array([1])):
         indices = ops.xp.array(indices) 
         if indices.ndim != 2:
-            raise ValueError(f"Expected indices to be a 2d matrix, with each row being a start, end pair")
+            raise ValueError(f"Expected indices to be a 2d matrix, with each row being a [start, end] pair")
 
     output = Ragged(indices, ops.asarray(lengths, dtype="i"))
     assert output.dataXd.ndim == 2
@@ -63,9 +60,9 @@ def from_spans(span_groups: List[List], *, ops: Optional[Ops] = None)->Ragged:
     return from_indices(indices, lengths, ops=ops)
 
 @registry.misc("entity_suggester.v1")
-def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = True)-> Callable[[List[Doc], List[str]], Ragged]:
+def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = True) -> Callable[[List[Doc], List[str]], Ragged]:
     """
-    Suggester which uses the spacy entity recognizer to suggest spans.
+    Suggester which uses the spaCy Entity Recognizer to suggest spans.
     """
     nlp = spacy.load(model)
 
@@ -81,16 +78,11 @@ def build_entity_suggester(model:str ="en_core_web_sm", make_diff_doc: bool = Tr
         for doc in docs:
             doc_spans = []
             if make_diff_doc:
-                new_doc = nlp(doc.text)
-                for ent in new_doc.ents:
-                    span = doc.char_span(ent.char_start, ent.char_end)
-                    if span:
-                        doc_spans.append(span)
-            else:
-                for ent in doc.ents:
-                    span = doc.char_span(ent.char_start, ent.char_end)
-                    if span:
-                        doc_spans.append(span)
+                doc = nlp(doc.text)
+            for ent in doc.ents:
+                span = doc.char_span(ent.char_start, ent.char_end)
+                if span:
+                    doc_spans.append(span)
             span_groups.append(doc_spans)
     
         return from_spans(span_groups, ops)
