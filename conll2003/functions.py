@@ -123,7 +123,7 @@ def build_random_spam_suggester(sizes: List)->Callable:
             while len(doc_spans) < 2 :
                 start = random.choice(range(token_count-2))
                 end = start + 1
-                element = ops.asarray([start, end])
+                element = ops.xp.array([start, end])
                 doc_spans.append(element)
                 length += 1
             
@@ -132,9 +132,9 @@ def build_random_spam_suggester(sizes: List)->Callable:
                 lengths.append(length)
 
         assert len(spans[-1]) == 2
-        spans = ops.asarray(spans)
+        spans = ops.xp.array(spans)
         assert spans.ndim == 2
-        output = Ragged(spans, ops.asarray(lengths, dtype="i"))
+        output = Ragged(spans, ops.xp.array(lengths, dtype="i"))
         assert output.dataXd.ndim == 2
         return output
 
