@@ -134,7 +134,7 @@ def build_nounchunk_ngram_suggester(sizes: List[int], train_corpus: Path) -> Cal
                 raise ValueError("Length is 0")
             spans.extend(ops.xp.array(doc_spans))
         
-        spans = list(set(spans))
+        # spans = list(set(spans))
         if len(spans) > 0:
             spans = ops.xp.array(spans)
             assert len(spans) == sum(lengths)
