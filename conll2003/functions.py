@@ -30,19 +30,15 @@ def from_indices(indices: List[Any], lengths:List, *, ops: Optional[Ops] = None)
 
     # check if sum of lengths is same as length of indices, if not raise ValueError
     if not np.allclose(np.sum(lengths), len(indices)):
-        raise ValueError("Sum of lengths of indices and lengths of spans do not match.")
-    sum_of_lengths = sum(lengths)
-    number_of_indices = len(indices)
+        raise ValueError("Sum of lengths of indices and lengths do not match.")
     
-    if number_of_indices <= 0:
+    if len(indices) <= 0:
         raise ValueError(f"There were no (start, end) pairs found. Check if indices input is empty")
     
     # check if any element is None, if yes raise ValueError
     if any(x is None for x in indices):
         raise ValueError(f"There were (start, end) pairs with None values. Check if indices input is empty")
     
-    if not sum_of_lengths == number_of_indices:
-        raise ValueError(f"The sum of all values in lengths is {sum_of_lengths}, while there are only {number_of_indices} (start, end) pairs. They're expected to be equal")
     if type(indices) == type([]) and type(indices[-1]) == type(ops.xp.array([1])):
         indices = ops.xp.array(indices) 
         if indices.ndim != 2:
