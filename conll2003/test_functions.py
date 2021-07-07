@@ -10,7 +10,7 @@ from thinc.api import (Config, Model, Ops, get_current_ops, set_dropout_rate,
                        to_numpy)
 from thinc.types import Ragged
 
-from functions import *
+from functions import build_ngram_suggester, build_entity_suggester, from_indices, from_spans
 import pytest
 from typing import Any, Callable, List, Optional
 SPAN_KEY = "sc"
@@ -18,7 +18,7 @@ SPAN_KEY = "sc"
 TEST_DATA = [{
     "sentence": "I am Abdul from Mumbai",
 },{
-    "sentence": "I work for Google Inc"
+    "sentence": "I work for Google Inc."
 }]
 
 def test_from_indices(nlp):
@@ -63,7 +63,54 @@ def test_from_indices(nlp):
 #     span_groups = [Span(docs[0], 4, 5), Span]
 #     output = from_spans(span_groups, docs, ops)
         
+def test_entity_suggester(en_tokenizer):
+    suggester = registry.misc.get("entity_suggester.v1")()
+    docs = [en_tokenizer(element["sentence"]) for element in TEST_DATA]
+    suggestions = suggester(docs)
+    assert suggestions.dataXd.ndim == 2
+    offset = 0
+    
+    expected_indices = [[2, 3], [4, 5], [3, 5]]
+    expected_lengths = [2, 1]
+   
+    for i, doc in enumerate(docs):
+        sz = suggestions.lengths[i]
+        spans = suggestions.dataXd[offset:offset + sz]
+        spans_set = set()
 
+        expected_set = expected_indices[offset: offset + sz]
+
+        for j, span in enumerate(spans):
+            assert_equal(span, expected_set[j])
+
+        for span in spans:
+            assert 0 <= span[0] < len(doc)
+            assert 0 < span[1] <= len(doc)
+            spans_set.add((span[0], span[1]))
+        # unique spans
+        assert spans.shape[0] == len(spans_set)
+        assert expected_lengths[i] == sz
+        offset += sz
+    
+    
+    # check if the number of spans is correct
+    # TODO
+
+    # check if the spans are correct for this specific suggester
+    # test some docs with entities
+    # TODO
+
+    # test some empty docs
+    # TODO 
+    
+    # test some docs with no entities
+    # TODO
+
+    # test all empty docs
+    # TODO
+
+    # test all docs with no entities
+    # TODO
 
 def test_ngram_suggester(en_tokenizer):
     # test different n-gram lengths

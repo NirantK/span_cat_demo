@@ -144,9 +144,7 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
 
 
 @registry.misc("entity_suggester.v1")
-def build_entity_suggester(
-    model: str = "en_core_web_sm", make_diff_doc: bool = True
-) -> Callable[[List[Doc], List[str]], Ragged]:
+def build_entity_suggester(model: str = "en_core_web_sm") -> Callable[[List[Doc], List[str]], Ragged]:
     """
     Suggester which uses the spaCy Entity Recognizer to suggest spans.
     """
