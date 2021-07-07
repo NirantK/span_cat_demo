@@ -202,6 +202,33 @@ def build_random_suggester(sizes: List) -> Callable:
 
     return random_suggester
 
+def intersect2D(a, b, ops: Ops):
+  """
+  Find row intersection between 2D numpy arrays, a and b.
+  Returns another numpy array with shared rows
+  """
+  a, b = to_numpy(a), to_numpy(b)
+  return ops.asarray([x for x in set(tuple(x) for x in a) & set(tuple(x) for x in b)])
+
+def merge_unique_ragged(one: Ragged, two:Ragged, *, ops: Optional[Ops] = None) -> Ragged:
+    """Merge two Ragged objects into one Ragged object"""
+    if ops is None:
+        ops = get_current_ops()
+
+    lengths = []
+    for suggest_one, suggest_two in zip(one, two):
+        assert suggest_one.dataXd.shape == suggest_two.dataXd.shape
+        assert suggest_one.lengths.shape == suggest_two.lengths.shape
+        assert suggest_one.dataXd.ndim == 2
+        assert suggest_one.lengths.ndim == 1
+        assert suggest_one.dataXd.dtype == suggest_two.dataXd.dtype == "i"
+        suggest_one.dataXd = suggest_one.dataXd + suggest_two.dataXd
+        common = intersect2D(suggest_one.dataXd, suggest_two.dataXd, ops)
+        length = len(common)
+        lengths.append(length)
+
+    output = Ragged(data=common, lengths=ops.asarray(lengths, dtype="i"))
+    return output
 
 @registry.misc("nounchunk_ngram_suggester.v1")
 def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
@@ -242,9 +269,9 @@ def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], R
         ngram_suggester = build_ngram_suggester(sizes = sizes)
         ngrams = ngram_suggester(docs = docs, ops = ops)
 
-        output = Ragged(data=ops.asarray(spans), lengths=ops.asarray(lengths, dtype="i"))
-        output += ngrams
-        return output
+        nounchunk_spans = Ragged(data=ops.asarray(spans), lengths=ops.asarray(lengths, dtype="i"))
+        nounchunk_ngram_spans = merge_unique_ragged(ngrams, nounchunk_spans, ops = ops)
+        return nounchunk_ngram_spans
 
     return nounchunk_ngram_suggester
 
