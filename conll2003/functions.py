@@ -242,7 +242,7 @@ def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], R
         ngram_suggester = build_ngram_suggester(sizes = sizes)
         ngrams = ngram_suggester(docs = docs, ops = ops)
 
-        output = Ragged(spans, ops.asarray(lengths, dtype="i"))
+        output = Ragged(data=ops.asarray(spans), lengths=ops.asarray(lengths, dtype="i"))
         output += ngrams
         return output
 
