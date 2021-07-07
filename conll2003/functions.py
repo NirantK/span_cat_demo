@@ -216,12 +216,17 @@ def merge_unique_ragged(one: Ragged, two:Ragged, *, ops: Optional[Ops] = None) -
         ops = get_current_ops()
 
     lengths = []
-    for suggest_one, suggest_two in zip(one, two):
-        assert suggest_one.dataXd.shape == suggest_two.dataXd.shape
-        assert suggest_one.lengths.shape == suggest_two.lengths.shape
-        assert suggest_one.dataXd.ndim == 2
-        assert suggest_one.lengths.ndim == 1
-        assert suggest_one.dataXd.dtype == suggest_two.dataXd.dtype == "i"
+    i_start, j_start = 0, 0
+    for i, j in zip(one.lengths, two.lengths):
+
+        suggest_one = one[i_start: i_start+i]
+        i_start += i
+        suggest_two = two[j_start: j_start+j]
+        j_start += j
+        
+        assert suggest_one.dataXd.shape[1] == suggest_two.dataXd.shape[1]
+        assert suggest_one.dataXd.ndim == suggest_two.dataXd.ndim == 2
+        assert suggest_one.lengths.ndim == suggest_two.lengths.ndim == 1
         suggest_one.dataXd = suggest_one.dataXd + suggest_two.dataXd
         common = intersect2D(suggest_one.dataXd, suggest_two.dataXd, ops)
         length = len(common)
