@@ -119,24 +119,6 @@ def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
         else:
             output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
 
-        # for doc in docs:
-        #     starts = ops.xp.arange(len(doc), dtype="i")
-        #     starts = starts.reshape((-1, 1))
-        #     length = 0
-        #     for size in sizes:
-        #         if size <= len(doc):
-        #             starts_size = starts[: len(doc) - (size - 1)]
-        #             spans.append(ops.xp.hstack((starts_size, starts_size + size)))
-        #             length += spans[-1].shape[0]
-        #         if spans:
-        #             assert spans[-1].ndim == 2, spans[-1].shape
-        #     lengths.append(length)
-        
-        # if len(spans) > 0:
-        #     output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
-        # else:
-        #     output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
-
         assert output.dataXd.ndim == 2
         return output
 
@@ -222,12 +204,11 @@ def build_random_suggester(sizes: List) -> Callable:
 
 
 @registry.misc("nounchunk_ngram_suggester.v1")
-def build_nounchunk_ngram_suggester(
-    sizes: List[int], train_corpus: Path
-) -> Callable[[List[Doc]], Ragged]:
-    """Suggest all spans of the given lengths. Spans are returned as a ragged
-    array of integers. The array has two columns, indicating the start and end
-    position."""
+def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
+    """
+    Suggest all spans of the given lengths. 
+    Spans are returned as a ragged array of integers. 
+    """
 
     nlp = spacy.load("en_core_web_sm")
 
@@ -237,22 +218,11 @@ def build_nounchunk_ngram_suggester(
         if ops is None:
             ops = get_current_ops()
 
-        spans = []
-        lengths = []
+        spans, lengths = [], []
 
         for doc in docs:
-            doc_spans = []
-            starts = ops.xp.arange(len(doc), dtype="i")
-            starts = starts.reshape((-1, 1))
-            length = 0
-            for size in sizes:
-                if size <= len(doc):
-                    starts_size = starts[: len(doc) - (size - 1)]
-                    ngrams = ops.xp.hstack((starts_size, starts_size + size))
-                    doc_spans.extend([element for element in ngrams])
-                    length += len(ngrams)
-
             new_doc = nlp(doc.text)
+            doc_spans, length = [], 0
             for chunk in new_doc.noun_chunks:
                 char_start, char_end = chunk.start_char, chunk.end_char
                 span = doc.char_span(char_start, char_end)
@@ -264,22 +234,16 @@ def build_nounchunk_ngram_suggester(
                     length += 1
 
             assert length == len(doc_spans)
-            lengths.append(length)
             if length == 0:
                 raise ValueError("Length is 0")
+            lengths.append(length)
             spans.extend(ops.xp.array(doc_spans))
+        
+        ngram_suggester = build_ngram_suggester()(sizes = sizes)
+        ngrams = ngram_suggester(docs = docs, ops = ops)
 
-        # spans = list(set(spans))
-        if len(spans) > 0:
-            spans = ops.xp.array(spans)
-            assert len(spans) == sum(lengths)
-            # print(type(spans), len(spans), len(lengths))
-            assert spans.ndim == 2
-            output = Ragged(spans, ops.asarray(lengths, dtype="i"))
-        else:
-            output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
-
-        assert output.dataXd.ndim == 2
+        output = Ragged(spans, ops.asarray(lengths, dtype="i"))
+        output += ngrams
         return output
 
     return nounchunk_ngram_suggester
