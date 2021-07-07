@@ -213,7 +213,12 @@ def intersect2D(a, b, ops: Ops):
 def union2d(a, b, ops:Ops):
     merged = ops.xp.concatenate([a, b], axis=0)
     merged = to_numpy(merged)
-    merged = ops.xp.vstack({tuple(row) for row in merged}) 
+    # print(len(merged))
+    merged = ops.xp.vstack({tuple(row) for row in merged})
+    span_set = set()
+    for row in to_numpy(merged):
+        span_set.add((row[0], row[1]))
+    assert len(span_set) == len(merged)
     return ops.asarray(merged)
 
 def merge_unique_ragged(one: Ragged, two:Ragged, *, ops: Optional[Ops] = None) -> Ragged:
@@ -222,19 +227,16 @@ def merge_unique_ragged(one: Ragged, two:Ragged, *, ops: Optional[Ops] = None) -
         ops = get_current_ops()
 
     lengths = []
-    i_start, j_start = 0, 0
-    for i, j in zip(one.lengths, two.lengths):
-
-        suggest_one = one[i_start: i_start+i]
-        i_start += i
-        suggest_two = two[j_start: j_start+j]
-        j_start += j
-        
-        assert suggest_one.dataXd.shape[1] == suggest_two.dataXd.shape[1]
-        assert suggest_one.dataXd.ndim == suggest_two.dataXd.ndim == 2
-        assert suggest_one.lengths.ndim == suggest_two.lengths.ndim == 1
-        # suggest_one.dataXd = suggest_one.dataXd + suggest_two.dataXd
-        common = union2d(suggest_one.dataXd, suggest_two.dataXd, ops)
+    one_offset, two_offset = 0, 0 
+    for one_l, two_l in zip(one.lengths, two.lengths):
+        suggest_one = one.dataXd[one_offset: one_offset+one_l]
+        one_offset += one_l
+        assert len(suggest_one) == one_l
+        suggest_two = two.dataXd[two_offset: two_offset+two_l]
+        two_offset += two_l
+        assert len(suggest_two) == two_l
+        assert suggest_one.ndim == suggest_two.ndim == 2
+        common = union2d(suggest_one, suggest_two, ops)
         length = len(common)
         lengths.append(length)
 
