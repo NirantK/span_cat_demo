@@ -212,6 +212,7 @@ def intersect2D(a, b, ops: Ops):
 
 def union2d(a, b, ops:Ops):
     merged = ops.xp.concatenate([a, b], axis=0)
+    merged = to_numpy(merged)
     merged = ops.xp.vstack({tuple(row) for row in merged}) 
     return ops.asarray(merged)
 
