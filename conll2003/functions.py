@@ -77,6 +77,59 @@ def from_spans(
         lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
 
+@registry.misc("ngram_suggester.v2")
+def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
+    """Suggest all spans of the given lengths. Spans are returned as a ragged
+    array of integers. The array has two columns, indicating the start and end
+    position."""
+
+    def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+        if ops is None:
+            ops = get_current_ops()
+        spans, lengths = [], []
+
+        for doc in docs:
+            doc_spans = []
+            starts = ops.xp.arange(len(doc), dtype="i")
+            starts = starts.reshape((-1, 1))
+            length = 0
+            for size in sizes:
+                if size <= len(doc):
+                    starts_size = starts[: len(doc) - (size - 1)]
+                    ngrams = ops.xp.hstack((starts_size, starts_size + size))
+                    doc_spans.extend([element for element in ngrams])
+                    length += len(ngrams)
+            lengths.append(length)
+            spans.extend(ops.xp.array(doc_spans))
+
+        if len(spans) > 0:
+            output = Ragged(ops.xp.array(spans), ops.asarray(lengths, dtype="i"))
+        else:
+            output = Ragged(ops.xp.zeros((0,0)), ops.asarray(lengths, dtype="i"))
+
+        # for doc in docs:
+        #     starts = ops.xp.arange(len(doc), dtype="i")
+        #     starts = starts.reshape((-1, 1))
+        #     length = 0
+        #     for size in sizes:
+        #         if size <= len(doc):
+        #             starts_size = starts[: len(doc) - (size - 1)]
+        #             spans.append(ops.xp.hstack((starts_size, starts_size + size)))
+        #             length += spans[-1].shape[0]
+        #         if spans:
+        #             assert spans[-1].ndim == 2, spans[-1].shape
+        #     lengths.append(length)
+        
+        # if len(spans) > 0:
+        #     output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
+        # else:
+        #     output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
+
+        assert output.dataXd.ndim == 2
+        return output
+
+    return ngram_suggester
+
 
 @registry.misc("entity_suggester.v1")
 def build_entity_suggester(
@@ -110,52 +163,6 @@ def build_entity_suggester(
         return from_spans(span_groups, docs, ops)
 
     return entity_suggester
-
-@registry.misc("ngram_suggester.v2")
-def build_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], Ragged]:
-    """Suggest all spans of the given lengths. Spans are returned as a ragged
-    array of integers. The array has two columns, indicating the start and end
-    position."""
-
-    def ngram_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
-        if ops is None:
-            ops = get_current_ops()
-        spans, lengths = [], []
-
-        # for doc in docs:
-        #     doc_spans = []
-        #     starts = ops.xp.arange(len(doc), dtype="i")
-        #     starts = starts.reshape((-1, 1))
-        #     length = 0
-        #     for size in sizes:
-        #         if size <= len(doc):
-        #             starts_size = starts[: len(doc) - (size - 1)]
-        #             ngrams = ops.xp.hstack((starts_size, starts_size + size))
-        #             doc_spans.extend([element for element in ngrams])
-        #             length += len(ngrams)
-
-        for doc in docs:
-            starts = ops.xp.arange(len(doc), dtype="i")
-            starts = starts.reshape((-1, 1))
-            length = 0
-            for size in sizes:
-                if size <= len(doc):
-                    starts_size = starts[: len(doc) - (size - 1)]
-                    spans.append(ops.xp.hstack((starts_size, starts_size + size)))
-                    length += spans[-1].shape[0]
-                if spans:
-                    assert spans[-1].ndim == 2, spans[-1].shape
-            lengths.append(length)
-        
-        if len(spans) > 0:
-            output = Ragged(ops.xp.vstack(spans), ops.asarray(lengths, dtype="i"))
-        else:
-            output = Ragged(ops.xp.zeros((0, 0)), ops.asarray(lengths, dtype="i"))
-
-        assert output.dataXd.ndim == 2
-        return output
-
-    return ngram_suggester
 
 
 @registry.misc("random_suggester.v1")

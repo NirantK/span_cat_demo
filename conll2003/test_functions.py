@@ -19,7 +19,7 @@ SPAN_KEY = "sc"
 def test_ngram_suggester(en_tokenizer):
     # test different n-gram lengths
     for size in [1, 2, 3]:
-        ngram_suggester = build_ngram_suggester(sizes=[size])
+        ngram_suggester = registry.misc.get("ngram_suggester.v2")(sizes=[size])
         docs = [
             en_tokenizer(text)
             for text in [
@@ -32,13 +32,15 @@ def test_ngram_suggester(en_tokenizer):
             ]
         ]
         ngrams = ngram_suggester(docs)
+        assert ngrams.dataXd.ndim == 2
         # span sizes are correct
         for s in ngrams.data:
             assert s[1] - s[0] == size
         # spans are within docs
         offset = 0
         for i, doc in enumerate(docs):
-            spans = ngrams.dataXd[offset : offset + ngrams.lengths[i]]
+            sz = ngrams.lengths[i]
+            spans = ngrams.dataXd[offset : offset + sz]
             spans_set = set()
             for span in spans:
                 assert 0 <= span[0] < len(doc)
