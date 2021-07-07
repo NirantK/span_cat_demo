@@ -30,9 +30,15 @@ def from_indices(indices: List[Any], lengths: List, ops: Optional[Ops] = None) -
     Returns:
         Ragged: the Thinc datatype for training
     """
+    if ops is None:
+        ops =  get_current_ops()
+    
+    if not isinstance(indices, list): 
+        raise TypeError(f"Expected list, got {type(indices)}")
+
     # check if sum of lengths is same as length of indices, if not raise ValueError
     if not np.allclose(np.sum(lengths), len(indices)):
-        raise ValueError("Sum of lengths of indices and lengths do not match.")
+        raise ValueError("lengths of indices and sum of lengths do not match.")
 
     if len(indices) == 0:
         raise ValueError(
@@ -41,18 +47,24 @@ def from_indices(indices: List[Any], lengths: List, ops: Optional[Ops] = None) -
 
     # check if any element is None, if yes raise ValueError
     if any(x is None for x in indices):
-        raise ValueError(
-            f"There were (start, end) pairs with None values. Check if indices input is correct"
+        raise AttributeError(
+            f"Got a None instead of (start, end) pair integer values. Check if indices input is correct"
+        )
+    
+    for pair in indices:
+        if any(x is None for x in pair):
+            raise AttributeError(
+            f"There was a None in one of the (start, end) pairs. Check if indices input is correct"
         )
 
-    if type(indices) == type([]) and type(indices[-1]) == type(ops.xp.array([1])):
-        indices = ops.xp.array(indices)
-        if indices.ndim != 2:
-            raise ValueError(
+
+    indices = ops.asarray(indices)
+    if indices.ndim != 2 or indices.shape[1] != 2:
+        raise ValueError(
                 f"Expected indices to be a 2d matrix, with each row being a [start, end] pair"
             )
 
-    output = Ragged(indices, ops.asarray(lengths, dtype="i"))
+    output = Ragged(data = indices, lengths = ops.asarray(lengths, dtype="i"))
     assert output.dataXd.ndim == 2
     return output
 

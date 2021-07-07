@@ -10,10 +10,59 @@ from thinc.api import (Config, Model, Ops, get_current_ops, set_dropout_rate,
                        to_numpy)
 from thinc.types import Ragged
 
-from functions import build_entity_suggester, build_ngram_suggester
+from functions import *
 import pytest
 from typing import Any, Callable, List, Optional
 SPAN_KEY = "sc"
+
+TEST_DATA = [{
+    "sentence": "I am Abdul from Mumbai",
+},{
+    "sentence": "I work for Google Inc"
+}]
+
+def test_from_indices(nlp):
+    
+    # does it raise value error when the lengths do not match
+    with pytest.raises(ValueError):
+        indices = [
+            [2, 3],
+            [7, 10],
+            [4, 5]
+        ]
+        lengths = [2, 2]
+        from_indices(indices, lengths)
+
+    # does it raise value error when indices is empty
+    with pytest.raises(ValueError):
+        indices = []
+        lengths = []
+        from_indices(indices, lengths)
+    
+    # does it raise value error when any index is None
+    with pytest.raises(AttributeError):
+        indices = [None, [1, 2], [3, 4]]
+        lengths = [1, 2]
+        from_indices(indices, lengths)
+    
+    with pytest.raises(AttributeError):
+        indices = [[None, 2], [1, 2], [3, 4]]
+        lengths = [1, 2]
+        from_indices(indices, lengths)
+
+    # check if an error is raised with indices are not 2d array
+    with pytest.raises(ValueError):
+        indices = [[1], [3], [5]]
+        lengths = [1, 2]
+        from_indices(indices, lengths)
+
+# def test_from_spans(nlp):
+#     # does it raise an error with span is not in doc
+#     ops = get_current_ops()
+#     docs = [nlp(element["sentence"]) for element in TEST_DATA]
+#     span_groups = [Span(docs[0], 4, 5), Span]
+#     output = from_spans(span_groups, docs, ops)
+        
 
 
 def test_ngram_suggester(en_tokenizer):
