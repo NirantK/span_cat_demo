@@ -18,7 +18,7 @@ SPAN_KEY = "sc"
 TEST_DATA = [{
     "sentence": "I am Abdul from Mumbai",
 },{
-    "sentence": "I work for Google Inc."
+    "sentence": "I used to work for Google Inc."
 }]
 
 def test_from_indices(nlp):
@@ -56,13 +56,29 @@ def test_from_indices(nlp):
         lengths = [1, 2]
         from_indices(indices, lengths)
 
-# def test_from_spans(nlp):
-#     # does it raise an error with span is not in doc
-#     ops = get_current_ops()
-#     docs = [nlp(element["sentence"]) for element in TEST_DATA]
-#     span_groups = [Span(docs[0], 4, 5), Span]
-#     output = from_spans(span_groups, docs, ops)
-        
+def test_from_spans():
+    # does it raise an error with span is not in doc
+    ops = get_current_ops()
+    blank_nlp = spacy.blank("en")
+
+    # Test with valid spans and docs
+    docs = [blank_nlp(element["sentence"]) for element in TEST_DATA]
+    span_groups = [
+        [Span(docs[0], 4, 5), Span(docs[0], 2, 3)],
+        [Span(docs[1], 3, 5)]
+    ]
+
+    _ = from_spans(span_groups, docs, ops)
+
+    # Test with invalid span groups
+    with pytest.raises(AttributeError):
+        span_groups = [
+            [None, Span(docs[0], 2, 3)],
+            [Span(docs[1], 3, 5)]
+        ]
+        _ = from_spans(span_groups, docs, ops)
+
+
 def test_entity_suggester(en_tokenizer):
     suggester = registry.misc.get("entity_suggester.v1")()
     docs = [en_tokenizer(element["sentence"]) for element in TEST_DATA]
@@ -70,7 +86,7 @@ def test_entity_suggester(en_tokenizer):
     assert suggestions.dataXd.ndim == 2
     offset = 0
     
-    expected_indices = [[2, 3], [4, 5], [3, 5]]
+    expected_indices = [[2, 3], [4, 5], [5, 7]]
     expected_lengths = [2, 1]
    
     for i, doc in enumerate(docs):

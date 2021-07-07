@@ -81,9 +81,9 @@ def from_spans(
     lengths = []
     for doc, spans in zip(docs, span_groups):
         for span in spans:
+            if span is None: 
+                raise AttributeError(f"Got a None instead of a span. Check if spans input is correct")
             start, end = span.start, span.end
-            assert start < end
-            assert end <= len(doc)
             indices.append(ops.xp.array([start, end]))
 
         lengths.append(len(spans))
