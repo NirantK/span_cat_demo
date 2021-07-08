@@ -37,8 +37,8 @@ def from_indices(indices: List[Any], lengths: List, ops: Optional[Ops] = None) -
         raise TypeError(f"Expected list, got {type(indices)}")
 
     # check if sum of lengths is same as length of indices, if not raise ValueError
-    # if not np.allclose(np.sum(lengths), len(indices)):
-        # raise ValueError("lengths of indices and sum of lengths do not match.")
+    if not np.allclose(np.sum(lengths), len(indices)):
+        raise ValueError("lengths of indices and sum of lengths do not match.")
 
     if len(indices) == 0:
         raise ValueError(
@@ -56,12 +56,16 @@ def from_indices(indices: List[Any], lengths: List, ops: Optional[Ops] = None) -
             raise AttributeError(
             f"There was a None in one of the (start, end) pairs. Check if indices input is correct"
         )
+
+
     indices = ops.asarray(indices)
-    output = Ragged(data = indices, lengths = ops.asarray(lengths, dtype="i"))
-    if output.dataXd.ndim != 2:
+    if indices.ndim != 2 or indices.shape[1] != 2:
         raise ValueError(
-                    f"Expected indices to be a 2d matrix, with each row being a [start, end] pair"
-                )
+                f"Expected indices to be a 2d matrix, with each row being a [start, end] pair"
+            )
+
+    output = Ragged(data = indices, lengths = ops.asarray(lengths, dtype="i"))
+    assert output.dataXd.ndim == 2
     return output
 
 
@@ -76,15 +80,14 @@ def from_spans(
     indices = []
     lengths = []
     for doc, spans in zip(docs, span_groups):
-        length = 0
         for span in spans:
             if span is None: 
                 indices.append(ops.xp.array(ops.xp.zeros((0, 0))))
+                lengths.append(0)
             else:
                 start, end = span.start, span.end
-                length += 1
                 indices.append(ops.xp.array([start, end]))
-        lengths.append(length)
+                lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
 
 @registry.misc("ngram_suggester.v2")
