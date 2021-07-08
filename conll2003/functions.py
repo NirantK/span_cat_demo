@@ -82,11 +82,12 @@ def from_spans(
     for doc, spans in zip(docs, span_groups):
         for span in spans:
             if span is None: 
-                raise AttributeError(f"Got a None instead of a span. Check if spans input is correct")
-            start, end = span.start, span.end
-            indices.append(ops.xp.array([start, end]))
-
-        lengths.append(len(spans))
+                indices.append(ops.xp.array(ops.xp.zeros((0, 0))))
+                lengths.append(0)
+            else:
+                start, end = span.start, span.end
+                indices.append(ops.xp.array([start, end]))
+                lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
 
 @registry.misc("ngram_suggester.v2")
@@ -145,12 +146,14 @@ def build_entity_suggester(model: str = "en_core_web_sm") -> Callable[[List[Doc]
             doc_spans = []
             new_doc = nlp(doc.text)
             for ent in new_doc.ents:
-                char_start, char_end = ent.start_char, ent.end_char
-                span = doc.char_span(char_start, char_end)
+                span = doc.char_span(ent.start_char, ent.end_char)
                 if span is not None:
                     doc_spans.append(span)
-
-            span_groups.append(doc_spans)
+            
+            if len(doc_spans) > 0:
+                span_groups.append(doc_spans)
+            else:
+                span_groups.append([None])
 
         return from_spans(span_groups, docs, ops)
 
@@ -273,11 +276,12 @@ def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], R
                     doc_spans.append(element)
                     length += 1
 
-            assert length == len(doc_spans)
-            if length == 0:
-                raise ValueError("Length is 0")
             lengths.append(length)
-            spans.extend(ops.xp.array(doc_spans))
+            assert length == len(doc_spans)
+            if len(doc_spans) > 0:
+                spans.extend(ops.xp.array(doc_spans))
+            else:
+                spans.extend(ops.xp.array(ops.xp.zeros((0, 0))))
         
         ngram_suggester = build_ngram_suggester(sizes = sizes)
         ngrams = ngram_suggester(docs = docs, ops = ops)
