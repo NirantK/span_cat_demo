@@ -160,51 +160,6 @@ def build_entity_suggester(model: str = "en_core_web_sm") -> Callable[[List[Doc]
     return entity_suggester
 
 
-@registry.misc("random_suggester.v1")
-def build_random_suggester(sizes: List) -> Callable:
-    """
-    Suggests random spans for each doc.
-
-    Args:
-        sizes (List):
-
-    Returns:
-        Callable:
-    """
-    random.seed(37)
-
-    def random_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
-        """
-        Suggests 2 spans at random from each doc of a random size from sizes
-        """
-        if ops is None:
-            ops = get_current_ops()
-
-        spans, lengths = [], []
-        for doc in docs:
-            length = 0
-            token_count = len(doc)
-            doc_spans = []
-            while len(doc_spans) < 2:
-                start = random.choice(range(token_count - 2))
-                end = start + 1
-                element = ops.xp.array([start, end])
-                doc_spans.append(element)
-                length += 1
-
-            if len(doc_spans) > 0 and len(doc_spans) == length:
-                spans.extend(doc_spans)
-                lengths.append(length)
-
-        assert len(spans[-1]) == 2
-        spans = ops.xp.array(spans)
-        assert spans.ndim == 2
-        output = Ragged(spans, ops.xp.array(lengths, dtype="i"))
-        assert output.dataXd.ndim == 2
-        return output
-
-    return random_suggester
-
 def intersect2D(a, b, ops: Ops):
   """
   Find row intersection between 2D numpy arrays, a and b.
@@ -288,7 +243,7 @@ def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], R
 
         nounchunk_spans = Ragged(data=ops.asarray(spans), lengths=ops.asarray(lengths, dtype="i"))
         nounchunk_ngram_spans = merge_unique_ragged(ngrams, nounchunk_spans, ops = ops)
-        return nounchunk_ngram_spans
+        return ngrams
 
     return nounchunk_ngram_suggester
 
@@ -350,3 +305,48 @@ def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], R
 #         return output
 
 #     return ngram_suggester
+
+# @registry.misc("random_suggester.v1")
+# def build_random_suggester(sizes: List) -> Callable:
+#     """
+#     Suggests random spans for each doc.
+
+#     Args:
+#         sizes (List):
+
+#     Returns:
+#         Callable:
+#     """
+#     random.seed(37)
+
+#     def random_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+#         """
+#         Suggests 2 spans at random from each doc of a random size from sizes
+#         """
+#         if ops is None:
+#             ops = get_current_ops()
+
+#         spans, lengths = [], []
+#         for doc in docs:
+#             length = 0
+#             token_count = len(doc)
+#             doc_spans = []
+#             while len(doc_spans) < 2:
+#                 start = random.choice(range(token_count - 2))
+#                 end = start + 1
+#                 element = ops.xp.array([start, end])
+#                 doc_spans.append(element)
+#                 length += 1
+
+#             if len(doc_spans) > 0 and len(doc_spans) == length:
+#                 spans.extend(doc_spans)
+#                 lengths.append(length)
+
+#         assert len(spans[-1]) == 2
+#         spans = ops.xp.array(spans)
+#         assert spans.ndim == 2
+#         output = Ragged(spans, ops.xp.array(lengths, dtype="i"))
+#         assert output.dataXd.ndim == 2
+#         return output
+
+#     return random_suggester
