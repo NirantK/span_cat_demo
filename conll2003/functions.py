@@ -87,7 +87,7 @@ def from_spans(
             else:
                 start, end = span.start, span.end
                 indices.append(ops.xp.array([start, end]))
-                lengths.append(len(spans))
+            lengths.append(len(spans))
     return from_indices(indices, lengths, ops=ops)
 
 @registry.misc("ngram_suggester.v2")
@@ -154,7 +154,7 @@ def build_entity_suggester(model: str = "en_core_web_sm") -> Callable[[List[Doc]
                 span_groups.append(doc_spans)
             else:
                 span_groups.append([None])
-
+        assert len(span_groups) == len(docs)
         return from_spans(span_groups, docs, ops)
 
     return entity_suggester
