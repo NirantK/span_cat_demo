@@ -288,7 +288,7 @@ def build_nounchunk_ngram_suggester(sizes: List[int]) -> Callable[[List[Doc]], R
 
         nounchunk_spans = Ragged(data=ops.asarray(spans), lengths=ops.asarray(lengths, dtype="i"))
         nounchunk_ngram_spans = merge_unique_ragged(ngrams, nounchunk_spans, ops = ops)
-        return ngrams
+        return nounchunk_ngram_spans
 
     return nounchunk_ngram_suggester
 
