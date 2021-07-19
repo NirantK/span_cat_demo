@@ -117,6 +117,8 @@ def build_entity_ngram_suggester(model: str = "en_core_web_sm", sizes: List[int]
             for size in sizes:
                 for i in range(token_count - size + 1):
                     doc_spans.append(doc[i: i+size])
+            
+            assert len(doc_spans) > 0
 
             if len(doc_spans) > 0:
                 span_groups.append(doc_spans)

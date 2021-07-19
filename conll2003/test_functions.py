@@ -117,7 +117,7 @@ def test_entity_suggester(en_tokenizer):
     # TODO
 
     # test some empty docs
-    # TODO 
+    # TODO
     
     # test some docs with no entities
     # TODO
