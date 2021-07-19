@@ -89,8 +89,8 @@ def from_spans(
             lengths.append(0)
     return from_indices(indices, lengths, ops=ops)
 
-@registry.misc("ngram_entity_suggester.v1")
-def build_entity_suggester(model: str = "en_core_web_sm", sizes: List[int] = [1]) -> Callable[[List[Doc], List[str]], Ragged]:
+@registry.misc("entity_ngram_suggester.v1")
+def build_entity_ngram_suggester(model: str = "en_core_web_sm", sizes: List[int] = [1]) -> Callable[[List[Doc], List[str]], Ragged]:
     """
     Suggester which uses the spaCy Entity Recognizer to suggest spans.
     """
@@ -122,7 +122,7 @@ def build_entity_suggester(model: str = "en_core_web_sm", sizes: List[int] = [1]
                 span_groups.append(doc_spans)
             else:
                 span_groups.append([])
-                
+
         assert len(span_groups) == len(docs)
         return from_spans(span_groups, docs, ops)
 
