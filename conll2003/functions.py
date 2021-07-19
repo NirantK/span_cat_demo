@@ -89,6 +89,46 @@ def from_spans(
             lengths.append(0)
     return from_indices(indices, lengths, ops=ops)
 
+@registry.misc("ngram_entity_suggester.v1")
+def build_entity_suggester(model: str = "en_core_web_sm", sizes: List[int] = [1]) -> Callable[[List[Doc], List[str]], Ragged]:
+    """
+    Suggester which uses the spaCy Entity Recognizer to suggest spans.
+    """
+    nlp = spacy.load(model)
+
+    def entity_suggester(docs: List[Doc], *, ops: Optional[Ops] = None) -> Ragged:
+        """
+        Suggests spans for each entity in the given docs.
+        """
+        span_groups = []
+
+        if ops is None:
+            ops = get_current_ops()
+
+        for doc in docs:
+            doc_spans = []
+            new_doc = nlp(doc.text)
+            for ent in new_doc.ents:
+                span = doc.char_span(ent.start_char, ent.end_char)
+                if span is not None:
+                    doc_spans.append(span)
+            
+            token_count = len(doc)
+            for size in sizes:
+                for i in range(token_count - size + 1):
+                    doc_spans.append(doc[i: i+size])
+
+            if len(doc_spans) > 0:
+                span_groups.append(doc_spans)
+            else:
+                span_groups.append([])
+                
+        assert len(span_groups) == len(docs)
+        return from_spans(span_groups, docs, ops)
+
+    return entity_suggester
+
+
 @registry.misc("entity_suggester.v1")
 def build_entity_suggester(model: str = "en_core_web_sm") -> Callable[[List[Doc], List[str]], Ragged]:
     """
