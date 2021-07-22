@@ -9,7 +9,7 @@ from thinc.api import (Config, Model, Ops, get_current_ops, set_dropout_rate,
                        to_numpy)
 from thinc.types import Ragged
 
-from functions import build_ngram_suggester, build_entity_suggester, from_indices, from_spans
+from functions import *
 import pytest
 from typing import Any, Callable, List, Optional
 SPAN_KEY = "sc"
