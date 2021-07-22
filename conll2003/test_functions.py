@@ -1,6 +1,5 @@
 import numpy as np
 import spacy
-from matplotlib.pyplot import axis
 from numpy.testing import assert_equal
 from spacy import registry
 from spacy.tokens import Doc, DocBin, Span
